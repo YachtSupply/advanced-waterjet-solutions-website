@@ -33,22 +33,22 @@ export interface OutboundWebhookConfig {
 
 export const siteConfig = {
   // ── Core business info ────────────────────────────────────
-  name: 'Marine Pro',
-  tagline: 'Expert Yacht & Marine Services',
+  name: 'Advanced Waterjet Solutions',
+  tagline: 'Your home for waterjet and laser cutting solutions in South Florida',
   description: 'Professional yacht management and marine repair services delivered with precision and care.',
   about: 'Marine Pro is a full-service marine contractor specializing in yacht management, repairs, and maintenance. Our experienced team delivers quality workmanship on every job.',
-  phone: '(555) 555-0100',
-  email: 'info@marinepro.example.com',
+  phone: '1-954-533-2464',
+  email: 'jacob@sailplan.com',
   address: '123 Marina Way, Fort Lauderdale, FL 33316',
   location: '123 Marina Way, Fort Lauderdale, FL 33316',
   city: 'Fort Lauderdale',
   state: 'FL',
-  logoUrl: '',
+  logoUrl: 'https://boatwork-images.s3.us-east-1.amazonaws.com/4bc1a9e8-3141-45c2-a328-ac3cbf360e2e.png',
 
   // ── Boatwork integration ──────────────────────────────────
   boatwork: {
-    profileSlug: 'template',
-    profileId: '', // UUID — set during provisioning, permanent link to profile
+    profileSlug: 'advanced-waterjet-solutions',
+    profileId: 'ababf6d2-ec4a-4c04-8a48-42c83cda8bfd', // UUID — set during provisioning, permanent link to profile
     profileUrl: 'https://boatwork.co/pro/template/',
     logoUrl: '/boatwork-logo.svg',
     useLiveReviews: false,
