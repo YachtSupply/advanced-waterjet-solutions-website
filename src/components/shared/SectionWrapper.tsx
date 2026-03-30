@@ -1,22 +1,39 @@
-import { clsx } from 'clsx';
+import clsx from 'clsx';
 
 interface SectionWrapperProps {
   children: React.ReactNode;
-  variant?: 'cream' | 'white' | 'navy' | 'dark';
-  className?: string;
+  variant?: 'sand' | 'white' | 'teal' | 'dark';
   id?: string;
+  className?: string;
+  innerClassName?: string;
+  fullWidth?: boolean;
 }
 
-export function SectionWrapper({ children, variant = 'white', className, id }: SectionWrapperProps) {
-  const variants = {
+export function SectionWrapper({
+  children,
+  variant = 'white',
+  id,
+  className,
+  innerClassName,
+  fullWidth = false,
+}: SectionWrapperProps) {
+  const bg: Record<string, string> = {
+    sand: 'bg-sand',
     white: 'bg-white',
-    cream: 'bg-cream',
-    navy: 'bg-navy text-white',
-    dark: 'bg-[#0D1F35] text-white',
+    teal: 'bg-teal text-white',
+    dark: 'bg-[var(--color-primary-light)] text-white',
   };
+
   return (
-    <section id={id} className={clsx('py-20 px-4 sm:px-6 lg:px-8', variants[variant], className)}>
-      <div className="max-w-7xl mx-auto">{children}</div>
+    <section
+      id={id}
+      className={clsx('py-20 px-4 sm:px-6 lg:px-8', bg[variant] ?? bg.white, className)}
+    >
+      {fullWidth ? (
+        children
+      ) : (
+        <div className={clsx('max-w-7xl mx-auto', innerClassName)}>{children}</div>
+      )}
     </section>
   );
 }

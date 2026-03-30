@@ -1,194 +1,203 @@
-export const dynamic = 'force-dynamic';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
-import { GiAnchor } from 'react-icons/gi';
-import { FiArrowRight, FiCheckCircle, FiAnchor } from 'react-icons/fi';
 import { getSiteData } from '@/lib/siteData';
-import { ServiceCard, SectionWrapper, ServiceAreaMap } from '@/components/shared';
+import { ServiceCard } from '@/components/shared/ServiceCard';
+import { SectionWrapper } from '@/components/shared/SectionWrapper';
+import { ArrowRight, CheckFat, Plus } from '@phosphor-icons/react/dist/ssr';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const siteConfig = await getSiteData();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
-  const apiSeo = siteConfig.apiSeo;
-  const serviceList = siteConfig.services.slice(0, 3).map((s) => s.name).join(', ');
+  const site = await getSiteData();
   return {
-    title: apiSeo?.titles?.services ?? `Marine Services by ${siteConfig.name} | ${siteConfig.city}, ${siteConfig.state}`,
-    description: apiSeo?.metaDescriptions?.services ?? `${siteConfig.name} offers ${serviceList}, and more for boat owners in ${siteConfig.city}, ${siteConfig.state}.`,
-    alternates: {
-      canonical: apiSeo?.canonicals?.services ?? (siteUrl ? `${siteUrl}/services` : '/services'),
-    },
+    title: `Services — ${site.name}`,
+    description: `Marine services offered by ${site.name}: ${site.services.map((s) => s.name).join(', ')}.`,
   };
 }
 
 export default async function ServicesPage() {
-  const siteConfig = await getSiteData();
+  const site = await getSiteData();
 
-  // Collect all FAQs from specialties for the FAQ accordion + structured data
-  const allFaqs = siteConfig.specialties.flatMap((sp) =>
-    sp.faqs.map((faq) => ({ ...faq, specialty: sp.name }))
-  );
+  // Gather FAQs from specialties
+  const faqs = site.specialties.flatMap((s) => s.faqs ?? []).slice(0, 8);
 
-  const faqSchema = allFaqs.length > 0 ? {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: allFaqs.map((f) => ({
-      '@type': 'Question',
-      name: f.question,
-      acceptedAnswer: { '@type': 'Answer', text: f.answer },
-    })),
-  } : null;
+  // FAQ JSON-LD
+  const jsonLd = faqs.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqs.map((faq) => ({
+          '@type': 'Question',
+          name: faq.question,
+          acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+        })),
+      }
+    : null;
 
   return (
     <>
-      <section className="bg-hero-gradient text-white py-24 px-4 text-center">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="h-px w-8 bg-gold/60" />
-            <GiAnchor className="text-gold" size={18} />
-            <div className="h-px w-8 bg-gold/60" />
-          </div>
-          <h1 className="font-serif text-5xl font-bold mb-4">Our Services</h1>
-          <p className="text-slate-300 font-sans max-w-xl mx-auto mb-8">{siteConfig.tagline}</p>
-          <Link
-            href="/contact"
-            className="inline-block bg-gold text-navy font-sans font-bold px-8 py-4 hover:bg-gold-light transition-colors uppercase tracking-widest text-sm whitespace-nowrap"
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+
+      {/* ── PAGE HEADER ──────────────────────────────────────────────────── */}
+      <section
+        className="pt-16 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+        style={{ backgroundColor: 'var(--color-primary)' }}
+      >
+        <div
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(45deg, white 0, white 1px, transparent 0, transparent 50%)',
+            backgroundSize: '20px 20px',
+          }}
+          aria-hidden
+        />
+        <div className="relative max-w-7xl mx-auto">
+          <span className="section-label" style={{ color: 'var(--color-accent)' }}>
+            Full Service List
+          </span>
+          <h1
+            className="font-heading font-extrabold text-5xl sm:text-6xl text-white mb-4"
+            style={{ letterSpacing: '-0.02em' }}
           >
-            Get a Quote
-          </Link>
-        </div>
-      </section>
-
-      <div className="gold-rule-full" />
-
-      <SectionWrapper variant="cream">
-        <div className="text-center mb-14">
-          <h2 className="font-serif text-3xl font-bold text-navy mb-4">Comprehensive Marine Expertise</h2>
-          <p className="text-text-light font-sans max-w-2xl mx-auto leading-relaxed">
-            Every service delivered with the precision and attention your investment deserves.
+            Marine Services
+          </h1>
+          <p className="text-lg max-w-2xl" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            Professional marine services from certified technicians. Ask us about anything not listed.
           </p>
         </div>
-        <div className={`grid gap-px bg-cream-dark ${
-          siteConfig.services.length === 1 ? 'grid-cols-1' :
-          siteConfig.services.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
-          siteConfig.services.length === 4 ? 'grid-cols-1 md:grid-cols-2' :
-          'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-        }`}>
-          {siteConfig.services.map((s) => (
-            <div key={s.name} className="bg-cream flex flex-col">
-              <ServiceCard {...s} />
-              <div className="px-8 pb-8 bg-white border border-cream-dark border-t-0 -mt-px">
-                <Link
-                  href="/contact"
-                  className="inline-flex items-center gap-2 whitespace-nowrap text-navy font-sans font-semibold text-xs uppercase tracking-widest hover:text-gold transition-colors border-b border-gold/40 pb-0.5"
-                >
-                  Request a Quote <FiArrowRight size={12} className="flex-shrink-0 inline-block" />
-                </Link>
-              </div>
-            </div>
+        <div
+          className="absolute bottom-0 left-0 right-0 h-12 bg-[var(--color-bg)]"
+          style={{ clipPath: 'polygon(0 100%, 100% 0, 100% 100%)' }}
+          aria-hidden
+        />
+      </section>
+
+      {/* ── SERVICES GRID ────────────────────────────────────────────────── */}
+      <SectionWrapper variant="sand">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
+          {site.services.map((service) => (
+            <ServiceCard
+              key={service.name}
+              name={service.name}
+              description={service.description}
+              icon={service.icon}
+              keywords={service.keywords}
+              benefits={service.benefits}
+              priceRange={service.priceRange}
+              typicalDuration={service.typicalDuration}
+            />
           ))}
         </div>
 
-        {siteConfig.serviceAreaTitle !== 'Our Location' && (
-          <div className="mt-10 flex items-center justify-center gap-3 bg-cream border border-cream-dark px-8 py-5 max-w-xl mx-auto">
-            <FiAnchor className="text-gold flex-shrink-0" size={18} />
-            <p className="font-sans text-sm text-text-light">
-              <span className="font-semibold text-navy">Mobile service available</span> — we come to your marina or dock.
-            </p>
-          </div>
-        )}
-      </SectionWrapper>
-
-      <div className="gold-rule-full" />
-
-      <SectionWrapper variant="white">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
+        {/* CTA */}
+        <div
+          className="rounded-2xl p-8 flex flex-col sm:flex-row items-center justify-between gap-6"
+          style={{ backgroundColor: 'var(--color-primary)' }}
+        >
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-px w-8 bg-gold/60" />
-              <span className="text-gold text-xs font-sans font-semibold uppercase tracking-widest">Common Projects</span>
-            </div>
-            <h2 className="font-serif text-3xl font-bold text-navy mb-8">What We Manage</h2>
-            <ul className="space-y-4">
-              {siteConfig.commonProjects?.map((p) => (
-                <li key={p} className="flex items-start gap-3 font-sans text-text">
-                  <FiCheckCircle className="text-gold mt-0.5 flex-shrink-0" size={18} />
-                  <span>{p}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="bg-cream border border-cream-dark p-10">
-            {siteConfig.portfolio.length > 0 && (
-              <div className="grid grid-cols-2 gap-2 mb-6 -mx-2">
-                {siteConfig.portfolio.slice(0, 2).map((photo, i) => (
-                  <div key={i} className="relative aspect-[4/3] overflow-hidden">
-                    <Image
-                      src={photo.src}
-                      alt={photo.caption || `Work by ${siteConfig.name}`}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-            <h3 className="font-serif text-2xl font-bold text-navy mb-4">Have a Special Project?</h3>
-            <p className="text-text-light font-sans mb-8 leading-relaxed">
-              Not sure which service you need? Our team is happy to discuss your vessel and recommend the right approach.
+            <p className="font-heading font-bold text-xl text-white mb-1">
+              Need something not listed?
             </p>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 whitespace-nowrap bg-navy text-white font-sans font-semibold px-8 py-4 hover:bg-navy/80 transition-colors uppercase tracking-widest text-sm"
-            >
-              Get a Quote <FiArrowRight size={14} className="flex-shrink-0 inline-block" />
-            </Link>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>
+              We handle a wide range of specialty projects. Just ask.
+            </p>
           </div>
+          <a
+            href={site.boatworkProfileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary flex-shrink-0"
+          >
+            Get a Free Estimate
+            <ArrowRight className="w-4 h-4" weight="bold" aria-hidden />
+          </a>
         </div>
       </SectionWrapper>
 
-      {/* FAQ Accordion — rendered when specialties have FAQ data */}
-      {allFaqs.length > 0 && (
-        <>
-          <div className="gold-rule-full" />
-          <SectionWrapper variant="cream">
-            <div className="max-w-3xl mx-auto">
-              <div className="text-center mb-10">
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <div className="h-px w-8 bg-gold/60" />
-                  <GiAnchor className="text-gold" size={20} />
-                  <div className="h-px w-8 bg-gold/60" />
-                </div>
-                <h2 className="font-serif text-3xl font-bold text-navy mb-4">Frequently Asked Questions</h2>
-                <p className="text-text-light font-sans max-w-xl mx-auto">
-                  Common questions about our marine services.
-                </p>
+      {/* ── COMMON PROJECTS ──────────────────────────────────────────────── */}
+      {site.commonProjects.length > 0 && (
+        <SectionWrapper variant="white">
+          <div className="mb-10">
+            <span className="section-label">Common Projects</span>
+            <h2
+              className="font-heading font-extrabold text-3xl sm:text-4xl"
+              style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}
+            >
+              Frequently Requested
+            </h2>
+            <div className="accent-rule mt-4" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {site.commonProjects.map((project) => (
+              <div
+                key={project}
+                className="flex items-start gap-3 p-4 rounded-lg border"
+                style={{ borderColor: 'var(--color-bg-dark)', backgroundColor: 'var(--color-bg)' }}
+              >
+                <CheckFat
+                  className="w-5 h-5 flex-shrink-0 mt-0.5"
+                  weight="fill"
+                  style={{ color: 'var(--color-accent)' }}
+                  aria-hidden
+                />
+                <span className="text-sm font-body" style={{ color: 'var(--color-text)' }}>
+                  {project}
+                </span>
               </div>
-              <div className="space-y-px bg-cream-dark border border-cream-dark">
-                {allFaqs.map((faq, i) => (
-                  <details key={i} className="group bg-white">
-                    <summary className="cursor-pointer list-none px-6 py-5 flex items-center justify-between gap-4 hover:bg-cream/50 transition-colors">
-                      <span className="font-sans font-semibold text-navy text-sm">{faq.question}</span>
-                      <span className="text-gold text-lg flex-shrink-0 transition-transform group-open:rotate-45">+</span>
-                    </summary>
-                    <div className="px-6 pb-5 pt-0">
-                      <p className="text-text font-sans text-sm leading-relaxed">{faq.answer}</p>
-                    </div>
-                  </details>
-                ))}
-              </div>
-            </div>
-          </SectionWrapper>
-        </>
+            ))}
+          </div>
+        </SectionWrapper>
       )}
 
-      {/* FAQPage structured data */}
-      {faqSchema && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-        />
+      {/* ── FAQ ──────────────────────────────────────────────────────────── */}
+      {faqs.length > 0 && (
+        <SectionWrapper variant="sand">
+          <div className="max-w-3xl mx-auto">
+            <div className="mb-10 text-center">
+              <span className="section-label">FAQ</span>
+              <h2
+                className="font-heading font-extrabold text-3xl sm:text-4xl"
+                style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}
+              >
+                Common Questions
+              </h2>
+              <div className="accent-rule mx-auto mt-4" />
+            </div>
+            <div className="space-y-3">
+              {faqs.map((faq, i) => (
+                <details
+                  key={i}
+                  className="group rounded-xl border bg-white overflow-hidden"
+                  style={{ borderColor: 'var(--color-bg-dark)' }}
+                >
+                  <summary className="flex items-center justify-between gap-4 p-5 cursor-pointer select-none list-none">
+                    <span
+                      className="font-heading font-semibold text-base"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      {faq.question}
+                    </span>
+                    <Plus
+                      className="w-5 h-5 flex-shrink-0 transition-transform duration-200 group-open:rotate-45"
+                      weight="bold"
+                      style={{ color: 'var(--color-accent)' }}
+                      aria-hidden
+                    />
+                  </summary>
+                  <div className="px-5 pb-5 border-t" style={{ borderColor: 'var(--color-bg-dark)' }}>
+                    <p className="text-sm leading-relaxed pt-4" style={{ color: 'var(--color-text-light)' }}>
+                      {faq.answer}
+                    </p>
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        </SectionWrapper>
       )}
     </>
   );

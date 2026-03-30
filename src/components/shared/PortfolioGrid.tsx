@@ -1,191 +1,190 @@
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Lightbox from 'yet-another-react-lightbox';
-import Captions from 'yet-another-react-lightbox/plugins/captions';
-import Video from 'yet-another-react-lightbox/plugins/video';
 import 'yet-another-react-lightbox/styles.css';
+import Captions from 'yet-another-react-lightbox/plugins/captions';
 import 'yet-another-react-lightbox/plugins/captions.css';
-
-interface PortfolioItem {
-  src: string;
-  caption: string;
-}
-
-interface VideoItem {
-  src: string;
-  poster?: string;
-  caption?: string;
-}
+import Video from 'yet-another-react-lightbox/plugins/video';
+import { PlayCircle, MagnifyingGlassPlus } from '@phosphor-icons/react';
+import type { PortfolioItem } from '@/lib/siteData';
 
 interface PortfolioGridProps {
   items: PortfolioItem[];
-  videos?: VideoItem[];
-  businessName?: string;
+  businessName: string;
 }
 
-function getVideoMimeType(src: string): string {
-  const ext = src.split('?')[0].split('.').pop()?.toLowerCase();
-  if (ext === 'mp4') return 'video/mp4';
-  if (ext === 'webm') return 'video/webm';
-  if (ext === 'mov') return 'video/mp4';
-  if (ext === 'ogg' || ext === 'ogv') return 'video/ogg';
-  return 'video/mp4';
+interface SlideItem {
+  type?: 'video';
+  src: string;
+  title?: string;
+  description?: string;
+  sources?: Array<{ src: string; type: string }>;
+  poster?: string;
 }
 
-function VideoThumbnail({ src, poster, alt }: { src: string; poster?: string; alt: string }) {
-  const [thumb, setThumb] = useState<string | null>(null);
-  const attempted = useRef(false);
+function VideoThumbnail({
+  src,
+  poster,
+  caption,
+  onClick,
+}: {
+  src: string;
+  poster?: string;
+  caption: string | null;
+  onClick: () => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [thumbUrl, setThumbUrl] = useState<string | null>(poster || null);
 
   useEffect(() => {
-    if (poster || attempted.current) return;
-    attempted.current = true;
+    if (thumbUrl || !canvasRef.current) return;
+
     const video = document.createElement('video');
     video.crossOrigin = 'anonymous';
-    video.muted = true;
-    video.preload = 'metadata';
     video.src = src;
+    video.currentTime = 1;
+    video.muted = true;
 
-    const capture = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 360;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          // Only use if canvas isn't blank (cross-origin frames produce blank)
-          if (dataUrl !== 'data:,') setThumb(dataUrl);
+    video.addEventListener('seeked', () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0);
+        try {
+          setThumbUrl(canvas.toDataURL('image/jpeg'));
+        } catch {
+          // CORS blocked
         }
-      } catch {
-        // CORS or security error — leave thumb as null, dark bg shows
       }
-    };
+    });
 
-    const onLoaded = () => { video.currentTime = 0.1; };
-    video.addEventListener('loadeddata', onLoaded, { once: true });
-    video.addEventListener('seeked', capture, { once: true });
+    video.load();
+  }, [src, thumbUrl]);
 
-    return () => {
-      video.removeEventListener('loadeddata', onLoaded);
-      video.removeEventListener('seeked', capture);
-      video.src = '';
-    };
-  }, [src, poster]);
-
-  const imgSrc = poster || thumb;
-
-  if (imgSrc) {
-    return (
-      <Image
-        src={imgSrc}
-        alt={alt}
-        fill
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        className="object-cover group-hover:scale-105 transition-transform duration-500"
-        unoptimized
-      />
-    );
-  }
-
-  // Fallback: dark gradient background (better than plain black)
   return (
-    <div className="absolute inset-0 bg-gradient-to-br from-navy to-navy/80" />
+    <button
+      onClick={onClick}
+      className="portfolio-item w-full h-full group relative"
+      aria-label={`Play video${caption ? `: ${caption}` : ''}`}
+    >
+      <canvas ref={canvasRef} className="hidden" />
+      {thumbUrl ? (
+        <Image
+          src={thumbUrl}
+          alt={caption || 'Video thumbnail'}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover w-full h-full"
+        />
+      ) : (
+        <div
+          className="w-full h-full flex items-center justify-center"
+          style={{ backgroundColor: 'var(--color-primary)' }}
+        />
+      )}
+      {/* Play overlay */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg transition-transform duration-200 group-hover:scale-110">
+          <PlayCircle
+            className="w-8 h-8"
+            style={{ color: 'var(--color-accent)' }}
+            weight="fill"
+            aria-hidden
+          />
+        </div>
+      </div>
+      {caption && (
+        <div className="overlay">
+          <p className="text-white text-sm font-body">{caption}</p>
+        </div>
+      )}
+    </button>
   );
 }
 
-export function PortfolioGrid({ items, videos = [], businessName }: PortfolioGridProps) {
-  const [index, setIndex] = useState(-1);
+export function PortfolioGrid({ items, businessName }: PortfolioGridProps) {
+  const [lightboxIndex, setLightboxIndex] = useState(-1);
 
-  const imageSlides = items.map((item) => ({
-    src: item.src,
-    title: item.caption,
-  }));
-
-  const videoSlides = videos.map((v) => ({
-    type: 'video' as const,
-    poster: v.poster || undefined,
-    title: v.caption || undefined,
-    sources: [{ src: v.src, type: getVideoMimeType(v.src) }],
-    width: 1920,
-    height: 1080,
-  }));
-
-  const slides = [...imageSlides, ...videoSlides];
+  const slides: SlideItem[] = items.map((item) => {
+    if (item.type === 'video') {
+      return {
+        type: 'video',
+        src: item.src,
+        sources: [{ src: item.src, type: 'video/mp4' }],
+        poster: item.poster,
+        title: item.caption || undefined,
+      };
+    }
+    return {
+      src: item.src,
+      title: item.caption || undefined,
+    };
+  });
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
-        {items.map((item, i) => (
-          <button
-            key={i}
-            onClick={() => setIndex(i)}
-            className="relative aspect-[4/3] overflow-hidden group cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold"
-          >
-            <Image
-              src={item.src}
-              alt={item.caption || (businessName ? `${businessName} marine service project ${i + 1}` : `Marine service project ${i + 1}`)}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
-              unoptimized
-            />
-            <div className="absolute inset-0 bg-navy/0 group-hover:bg-navy/50 transition-all duration-300 flex items-end">
-              <p className="text-white font-sans text-sm font-medium px-4 py-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                {item.caption}
-              </p>
-            </div>
-            <div className="absolute top-3 right-3 w-8 h-8 bg-gold/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <span className="text-white text-xs">⊕</span>
-            </div>
-          </button>
-        ))}
-        {videos.map((v, i) => (
-          <button
-            key={`video-${i}`}
-            onClick={() => setIndex(items.length + i)}
-            className="relative aspect-[4/3] overflow-hidden group cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold"
-          >
-            <VideoThumbnail
-              src={v.src}
-              poster={v.poster || undefined}
-              alt={v.caption || `Video ${i + 1}`}
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-14 h-14 bg-white/80 rounded-full flex items-center justify-center shadow-lg group-hover:bg-white transition-colors">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 text-navy ml-1">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
+      {/* Responsive grid */}
+      <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-0">
+        {items.map((item, index) => (
+          <div key={`${item.src}-${index}`} className="mb-4 break-inside-avoid">
+            {item.type === 'video' ? (
+              <div className="relative aspect-video rounded-lg overflow-hidden">
+                <VideoThumbnail
+                  src={item.src}
+                  poster={item.poster}
+                  caption={item.caption}
+                  onClick={() => setLightboxIndex(index)}
+                />
               </div>
-            </div>
-            <div className="absolute inset-0 bg-navy/0 group-hover:bg-navy/50 transition-all duration-300 flex items-end">
-              <p className="text-white font-sans text-sm font-medium px-4 py-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                {v.caption}
-              </p>
-            </div>
-            <div className="absolute top-3 right-3 w-8 h-8 bg-gold/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <span className="text-white text-xs">⊕</span>
-            </div>
-          </button>
+            ) : (
+              <div
+                className="portfolio-item rounded-lg overflow-hidden cursor-pointer"
+                style={{ aspectRatio: index % 3 === 1 ? '4/5' : '4/3' }}
+                onClick={() => setLightboxIndex(index)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && setLightboxIndex(index)}
+                aria-label={`View photo${item.caption ? `: ${item.caption}` : ''}`}
+              >
+                <Image
+                  src={item.src}
+                  alt={item.caption || `${businessName} portfolio photo`}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover"
+                />
+                <div className="overlay">
+                  <div className="flex items-end gap-2 w-full">
+                    <MagnifyingGlassPlus
+                      className="w-5 h-5 text-white flex-shrink-0"
+                      weight="bold"
+                      aria-hidden
+                    />
+                    {item.caption && (
+                      <p className="text-white text-sm font-body leading-snug line-clamp-2">
+                        {item.caption}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         ))}
       </div>
 
       <Lightbox
-        open={index >= 0}
-        index={index}
-        close={() => setIndex(-1)}
-        slides={slides}
+        open={lightboxIndex >= 0}
+        close={() => setLightboxIndex(-1)}
+        index={lightboxIndex}
+        slides={slides as Parameters<typeof Lightbox>[0]['slides']}
         plugins={[Captions, Video]}
-        video={{ autoPlay: true, controls: true, playsInline: true }}
-        styles={{
-          container: { backgroundColor: 'rgba(14, 26, 45, 0.97)' },
-          root: {
-            '--yarl__slide_captions_container_background': 'rgba(0,0,0,0.5)',
-            '--yarl__slide_max_width': '92vw',
-            '--yarl__slide_max_height': '92vh',
-          } as Record<string, string>,
-        }}
+        captions={{ showToggle: true }}
       />
     </>
   );

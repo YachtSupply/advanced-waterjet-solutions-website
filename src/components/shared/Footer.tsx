@@ -1,115 +1,179 @@
 import Link from 'next/link';
-import Image from 'next/image';
-import { FiFacebook, FiInstagram, FiLinkedin, FiYoutube, FiPhone, FiMapPin } from 'react-icons/fi';
-import { TEMPLATE_VERSION } from '@/site.config';
-import { getSiteData } from '@/lib/siteData';
-import { formatPhone } from '@/lib/phoneUtils';
+import {
+  FacebookLogo,
+  InstagramLogo,
+  LinkedinLogo,
+  YoutubeLogo,
+  Phone,
+  MapPin,
+  ArrowUpRight,
+} from '@phosphor-icons/react/dist/ssr';
+import { Logo } from './Logo';
 import { BoatworkBadge } from './BoatworkBadge';
+import { formatPhone } from '@/lib/phoneUtils';
+import type { SiteData } from '@/lib/siteData';
 
-const navLinks: [string, string][] = [
-  ['/', 'Home'],
-  ['/about', 'About'],
-  ['/services', 'Services'],
-  ['/portfolio', 'Portfolio'],
-  ['/contact', 'Contact'],
-  ['/privacy', 'Privacy Policy'],
+interface FooterProps {
+  site: SiteData;
+}
+
+const baseNavLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/about', label: 'About' },
+  { href: '/services', label: 'Services' },
+  { href: '/contact', label: 'Contact' },
+  { href: '/privacy', label: 'Privacy Policy' },
 ];
 
-export async function Footer() {
-  const siteConfig = await getSiteData();
-  const phone = formatPhone(siteConfig.phone);
+export function Footer({ site }: FooterProps) {
+  const hasPortfolio = site.portfolio.length > 0;
+  const navLinks = hasPortfolio
+    ? [
+        { href: '/', label: 'Home' },
+        { href: '/about', label: 'About' },
+        { href: '/services', label: 'Services' },
+        { href: '/portfolio', label: 'Portfolio' },
+        { href: '/contact', label: 'Contact' },
+        { href: '/privacy', label: 'Privacy Policy' },
+      ]
+    : baseNavLinks;
+  const phone = formatPhone(site.phone);
+  const year = new Date().getFullYear();
+
   return (
-    <footer className="bg-navy text-white">
-      {/* marine-pro-template v1.0.0 */}
-      <div className="gold-rule-full" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          {/* Brand */}
-          <div>
+    <footer style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}>
+      {/* Main footer body */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+          {/* Col 1: Brand */}
+          <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-4">
-              {siteConfig.logoUrl ? (
-                <Image
-                  src={siteConfig.logoUrl}
-                  alt={siteConfig.name}
-                  width={52}
-                  height={52}
-                  className="rounded-full object-cover"
-                  unoptimized
-                />
-              ) : (
-                <span className="flex items-center justify-center rounded-full bg-gold text-navy font-serif font-bold flex-shrink-0" style={{ width: 52, height: 52, fontSize: 20 }}>
-                  {siteConfig.name.charAt(0)}
-                </span>
-              )}
-              <span className="font-serif text-xl font-bold text-white">{siteConfig.name}</span>
+              <Logo logoUrl={site.logoUrl} name={site.name} size="md" inverted />
+              <span className="font-heading font-bold text-xl text-white">{site.name}</span>
             </div>
-            <p className="text-slate-400 text-sm leading-relaxed mb-5">{siteConfig.tagline}</p>
+            <p className="text-sm leading-relaxed mb-6 text-white/65">
+              {site.tagline}
+            </p>
+
+            {/* Contact info */}
             <div className="space-y-2">
-              <a href={phone?.href ?? `tel:${siteConfig.phone}`} className="flex items-center gap-2 text-slate-400 hover:text-gold transition-colors text-sm">
-                <FiPhone size={14} className="text-gold" />
-                {phone?.display ?? siteConfig.phone}
-              </a>
-              <div className="flex items-center gap-2 text-slate-400 text-sm">
-                <FiMapPin size={14} className="text-gold" />
-                {siteConfig.address}
-              </div>
+              {phone && (
+                <a
+                  href={phone.href}
+                  className="flex items-center gap-2 text-sm text-white/75 hover:text-coral transition-colors duration-200"
+                >
+                  <Phone className="w-4 h-4 flex-shrink-0" weight="bold" aria-hidden />
+                  {phone.display}
+                </a>
+              )}
+              {site.address && (
+                <div className="flex items-start gap-2 text-sm text-white/65">
+                  <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" weight="bold" aria-hidden />
+                  <span>{site.address}</span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Navigation */}
+          {/* Col 2: Navigation */}
           <div>
-            <p className="text-xs font-sans font-semibold uppercase tracking-widest text-gold mb-5">Navigation</p>
-            <ul className="space-y-3">
-              {navLinks.map(([href, label]) => (
-                <li key={href}>
-                  <Link href={href} className="text-slate-400 text-sm hover:text-white transition-colors font-sans">
-                    {label}
+            <h3 className="font-mono text-xs font-medium tracking-widest uppercase mb-4 text-coral">
+              Navigation
+            </h3>
+            <ul className="space-y-2">
+              {navLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-white/65 hover:text-white transition-colors duration-200"
+                  >
+                    {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Connect */}
+          {/* Col 3: Social + Boatwork */}
           <div>
-            <p className="text-xs font-sans font-semibold uppercase tracking-widest text-gold mb-5">Connect</p>
-            <div className="flex gap-4 mb-6">
-              {siteConfig.social.facebook && (
-                <a href={siteConfig.social.facebook} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-gold transition-colors">
-                  <FiFacebook size={20} />
+            <h3 className="font-mono text-xs font-medium tracking-widest uppercase mb-4 text-coral">
+              Connect
+            </h3>
+
+            {/* Social icons */}
+            <div className="flex gap-3 mb-6">
+              {site.social.facebook && (
+                <a
+                  href={site.social.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                  className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/10 hover:bg-coral transition-colors duration-200"
+                >
+                  <FacebookLogo className="w-4 h-4 text-white" weight="bold" aria-hidden />
                 </a>
               )}
-              {siteConfig.social.instagram && (
-                <a href={siteConfig.social.instagram} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-gold transition-colors">
-                  <FiInstagram size={20} />
+              {site.social.instagram && (
+                <a
+                  href={site.social.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/10 hover:bg-coral transition-colors duration-200"
+                >
+                  <InstagramLogo className="w-4 h-4 text-white" weight="bold" aria-hidden />
                 </a>
               )}
-              {siteConfig.social.linkedin && (
-                <a href={siteConfig.social.linkedin} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-gold transition-colors">
-                  <FiLinkedin size={20} />
+              {site.social.linkedin && (
+                <a
+                  href={site.social.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="LinkedIn"
+                  className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/10 hover:bg-coral transition-colors duration-200"
+                >
+                  <LinkedinLogo className="w-4 h-4 text-white" weight="bold" aria-hidden />
                 </a>
               )}
-              {siteConfig.social.youtube && (
-                <a href={siteConfig.social.youtube} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-gold transition-colors">
-                  <FiYoutube size={20} />
+              {site.social.youtube && (
+                <a
+                  href={site.social.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="YouTube"
+                  className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/10 hover:bg-coral transition-colors duration-200"
+                >
+                  <YoutubeLogo className="w-4 h-4 text-white" weight="bold" aria-hidden />
                 </a>
               )}
             </div>
+
+            {/* Boatwork badge */}
             <BoatworkBadge
-              profileUrl={siteConfig.badge?.profileUrl}
-              badgeUrl={siteConfig.badge?.badgeUrl}
-              svgUrl={siteConfig.badge?.svgUrl}
-              embedCode={siteConfig.badge?.embedCode}
-              inverted={true}
+              badge={site.badge}
+              profileUrl={site.boatworkProfileUrl}
+              logoUrl={site.boatworkLogoUrl}
+              name={site.name}
             />
           </div>
         </div>
+      </div>
 
-        <div className="gold-rule mt-10 mb-6" />
-
-        <div className="text-center text-slate-500 text-xs font-sans">
-          © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
-          {/* marine-pro-template v{TEMPLATE_VERSION} */}
+      {/* Bottom bar */}
+      <div className="border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="text-xs text-white/40">
+            © {year} {site.name}. All rights reserved.
+          </p>
+          <a
+            href={site.boatworkProfileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs text-white/40 hover:text-white/70 transition-colors duration-200"
+          >
+            Powered by Boatwork
+            <ArrowUpRight className="w-3 h-3" aria-hidden />
+          </a>
         </div>
       </div>
     </footer>

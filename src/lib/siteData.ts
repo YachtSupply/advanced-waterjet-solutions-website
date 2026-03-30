@@ -41,9 +41,18 @@ function loadGeneratedContent(profile: BoatworkProfile): GeneratedContent {
   return buildFallbackContent(profile);
 }
 
+// ---------- PortfolioItem (exported for use by components) ----------
+
+export interface PortfolioItem {
+  src: string;
+  caption: string | null;
+  type?: 'photo' | 'video';
+  poster?: string;
+}
+
 // ---------- Return type ----------
 
-export type SiteData = Omit<typeof siteConfig, 'hoursOfOperation' | 'services' | 'boatwork'> & {
+export type SiteData = Omit<typeof siteConfig, 'hoursOfOperation' | 'services' | 'boatwork' | 'portfolio' | 'videos'> & {
   badge: BoatworkProfile['badge'];
   badges: BoatworkProfile['badges'];
   boatwork: {
@@ -54,7 +63,7 @@ export type SiteData = Omit<typeof siteConfig, 'hoursOfOperation' | 'services' |
     useLiveReviews: boolean;
     staticReviews: BoatworkProfile['reviews'];
   };
-  hoursOfOperation: Record<string, string> | null;
+  hoursOfOperation: Record<string, string>;
   serviceAreaTitle: string;
   yearEstablished: number | null;
   websiteTheme: string;
@@ -63,6 +72,17 @@ export type SiteData = Omit<typeof siteConfig, 'hoursOfOperation' | 'services' |
   specialties: BoatworkProfile['specialties'];
   apiSeo: BoatworkSeo | null;
   aboutExcerpt: string | null;
+  portfolio: PortfolioItem[];
+  videos: Array<{ src: string; poster: string; caption: string | null }>;
+  // v2 component fields
+  boatworkProfileUrl: string;
+  boatworkLogoUrl: string;
+  isVerified: boolean;
+  rating: number | null;
+  reviewCount: number;
+  reviews: BoatworkProfile['reviews'];
+  heroHeadline: string;
+  heroSubheadline: string;
 };
 
 // ---------- Icon mapping ----------
@@ -122,16 +142,19 @@ export const getSiteData = cache(async (): Promise<SiteData> => {
   // If API is down, return static config unchanged
   if (!profile) {
     // Normalize static reviews to the enriched shape expected by SiteData
-    const fallbackReviews: BoatworkProfile['reviews'] = siteConfig.boatwork.staticReviews.map((r) => ({
-      id: ('id' in r ? (r as Record<string, unknown>).id as string | null : null),
-      author: r.author,
-      rating: r.rating,
-      text: r.text,
-      date: r.date,
-      isVerified: ('isVerified' in r ? !!(r as Record<string, unknown>).isVerified : false),
-      response: ('response' in r ? (r as Record<string, unknown>).response as string | null : null),
-      responseDate: ('responseDate' in r ? (r as Record<string, unknown>).responseDate as string | null : null),
-    }));
+    const fallbackReviews: BoatworkProfile['reviews'] = siteConfig.boatwork.staticReviews.map((r) => {
+      const rr = r as unknown as Record<string, unknown>;
+      return {
+        id: ('id' in r ? rr.id as string | null : null),
+        author: r.author,
+        rating: r.rating,
+        text: r.text,
+        date: r.date,
+        isVerified: ('isVerified' in r ? !!rr.isVerified : false),
+        response: ('response' in r ? rr.response as string | null : null),
+        responseDate: ('responseDate' in r ? rr.responseDate as string | null : null),
+      };
+    });
     return {
       ...siteConfig,
       badge: null,
@@ -144,6 +167,18 @@ export const getSiteData = cache(async (): Promise<SiteData> => {
       specialties: [],
       apiSeo: null,
       aboutExcerpt: null,
+      hoursOfOperation: siteConfig.hoursOfOperation,
+      portfolio: siteConfig.portfolio.map((p) => ({ src: p.src, caption: p.caption ?? null })),
+      videos: siteConfig.videos.map((v) => ({ src: v.src, poster: v.poster ?? '', caption: v.caption ?? null })),
+      // v2 component fields
+      boatworkProfileUrl: getProfileUrl(),
+      boatworkLogoUrl: getBoatworkLogoUrl(),
+      isVerified: false,
+      rating: null,
+      reviewCount: 0,
+      reviews: fallbackReviews,
+      heroHeadline: siteConfig.tagline,
+      heroSubheadline: siteConfig.description,
     };
   }
 
@@ -195,37 +230,41 @@ export const getSiteData = cache(async (): Promise<SiteData> => {
     responseDate: r.responseDate,
   }));
 
-  // Map API photos to portfolio shape — empty if profile has none
-  const portfolio = profile.photos.map((p) => ({
-    src: p.src,
-    caption: p.caption ?? '',
-  }));
+  // Combine photos and videos into one array sorted by orderIndex (stable, asc)
+  const allMedia: Array<{ src: string; caption: string | null; type: 'photo' | 'video'; poster?: string; orderIndex: number }> = [
+    ...profile.photos.map((p) => ({
+      src: p.src,
+      caption: p.caption ?? null,
+      type: 'photo' as const,
+      orderIndex: p.orderIndex,
+    })),
+    ...profile.videos.map((v) => ({
+      src: v.src,
+      caption: v.caption ?? null,
+      type: 'video' as const,
+      poster: v.poster ?? '',
+      orderIndex: v.orderIndex,
+    })),
+  ];
+  allMedia.sort((a, b) => a.orderIndex - b.orderIndex);
+  const portfolio = allMedia.map(({ orderIndex: _oi, ...item }) => item);
+  const videos: Array<{ src: string; poster: string; caption: string }> = [];
 
-  // Map API videos
-  const videos =
-    profile.videos.length > 0
-      ? profile.videos.map((v) => ({
-          src: v.src,
-          poster: v.poster ?? '',
-          caption: v.caption ?? '',
-        }))
-      : siteConfig.videos;
+  // Compute tagline — used for both tagline field and heroHeadline
+  const tagline = (
+    profile.tagline &&
+    profile.tagline.trim() &&
+    profile.tagline.trim().toLowerCase() !== 'new tagline goes here'
+  )
+    ? profile.tagline
+    : (ai.tagline ?? siteConfig.tagline);
 
   return {
     ...siteConfig,
 
     // Core business info — API values with static fallback
     name: profile.name || siteConfig.name,
-    // Profile tagline is user-entered — used verbatim, bypasses AI cache entirely
-    // AI tagline is only a fallback when contractor hasn't set one, or when the
-    // stored value is empty / a placeholder left over from onboarding.
-    tagline: (
-      profile.tagline &&
-      profile.tagline.trim() &&
-      profile.tagline.trim().toLowerCase() !== 'new tagline goes here'
-    )
-      ? profile.tagline
-      : (ai.tagline ?? siteConfig.tagline),
+    tagline,
     // description is the short hero blurb — first sentence, max 200 chars
     description: trimToSentence(profile.description, 200) || siteConfig.description,
     phone: profile.phone || siteConfig.phone,
@@ -237,8 +276,8 @@ export const getSiteData = cache(async (): Promise<SiteData> => {
 
     logoUrl: profile.logoUrl || '',
 
-    // about uses AI-enriched text first (full paragraphs), then full profile description, then static fallback
-    about: ai.about || profile.description || siteConfig.about,
+    // about uses AI-enriched text first (full paragraphs), then hand-crafted static copy, then raw profile description
+    about: ai.about || siteConfig.about || profile.description || '',
 
     services,
     // AI-generated commonProjects from specialties, with static fallback
@@ -304,7 +343,7 @@ export const getSiteData = cache(async (): Promise<SiteData> => {
     hoursOfOperation:
       profile.hoursOfOperation && Object.keys(profile.hoursOfOperation).length > 0
         ? profile.hoursOfOperation
-        : null,
+        : siteConfig.hoursOfOperation,
 
     social: {
       facebook: profile.social.facebook ?? siteConfig.social.facebook,
@@ -321,5 +360,15 @@ export const getSiteData = cache(async (): Promise<SiteData> => {
     specialties: profile.specialties,
     apiSeo: profile.seo,
     aboutExcerpt: profile.aboutExcerpt,
+
+    // v2 component fields
+    boatworkProfileUrl: profile.profileUrl || getProfileUrl(),
+    boatworkLogoUrl: getBoatworkLogoUrl(),
+    isVerified: profile.isVerified,
+    rating: profile.rating,
+    reviewCount: profile.reviewCount,
+    reviews: staticReviews,
+    heroHeadline: tagline,
+    heroSubheadline: profile.aboutExcerpt || trimToSentence(profile.description, 200) || siteConfig.description,
   };
 });

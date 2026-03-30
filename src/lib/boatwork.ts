@@ -30,12 +30,14 @@ export interface BoatworkService {
 export interface BoatworkPhoto {
   src: string;
   caption: string | null;
+  orderIndex: number;
 }
 
 export interface BoatworkVideo {
   src: string;
   poster: string | null;
   caption: string | null;
+  orderIndex: number;
 }
 
 export interface BoatworkSpecialty {
@@ -60,6 +62,10 @@ export interface BoatworkBadge {
   pixelUrl: string | null;
   profileUrl: string;
   isVerified: boolean;
+  // v2 component compat aliases
+  htmlContent: string | null;
+  imageUrl: string | null;
+  label: string | null;
 }
 
 export interface BoatworkSeo {
@@ -152,6 +158,10 @@ function normalizeBadge(raw: Record<string, unknown>, slug: string): BoatworkBad
     pixelUrl: asString(raw.pixelUrl),
     profileUrl,
     isVerified,
+    // v2 component compat aliases
+    htmlContent: asString(raw.embedCode) ?? asString(raw.embed_code) ?? asString(raw.htmlContent),
+    imageUrl: asString(raw.badgeUrl) ?? asString(raw.imageUrl),
+    label: asString(raw.name) ?? asString(raw.badgeName) ?? asString(raw.label),
   };
 }
 
@@ -170,7 +180,11 @@ function normalizePhoto(raw: Record<string, unknown>): BoatworkPhoto | null {
     asString(raw.image) ??
     asString(raw.fileUrl);
   if (!src) return null;
-  return { src, caption: asString(raw.caption) ?? asString(raw.title) };
+  return {
+    src,
+    caption: asString(raw.caption) ?? asString(raw.title),
+    orderIndex: typeof raw.orderIndex === 'number' ? raw.orderIndex : 0,
+  };
 }
 
 function normalizeVideo(raw: Record<string, unknown>): BoatworkVideo | null {
@@ -180,6 +194,7 @@ function normalizeVideo(raw: Record<string, unknown>): BoatworkVideo | null {
     src,
     poster: asString(raw.poster) ?? asString(raw.thumbnailUrl),
     caption: asString(raw.caption) ?? asString(raw.title),
+    orderIndex: typeof raw.orderIndex === 'number' ? raw.orderIndex : 0,
   };
 }
 

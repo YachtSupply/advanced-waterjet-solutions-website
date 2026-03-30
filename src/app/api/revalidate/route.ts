@@ -1,22 +1,26 @@
-/**
- * POST /api/revalidate?path=<path>&secret=<secret>
- *
- * On-demand ISR revalidation. Called by the sync route after a
- * Boatwork profile update to serve fresh data without a full redeploy.
- */
-
+import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const secret = searchParams.get('secret');
-  const path = searchParams.get('path') ?? '/';
+const ALL_PATHS = ['/', '/about', '/services', '/portfolio', '/contact'];
 
-  if (process.env.REVALIDATE_SECRET && secret !== process.env.REVALIDATE_SECRET) {
-    return NextResponse.json({ error: 'Invalid secret' }, { status: 401 });
+export async function POST(request: NextRequest) {
+  const secret = request.nextUrl.searchParams.get('secret');
+  const path = request.nextUrl.searchParams.get('path');
+
+  if (!process.env.REVALIDATE_SECRET) {
+    return NextResponse.json({ error: 'REVALIDATE_SECRET not configured', status: 500 }, { status: 500 });
   }
 
-  revalidatePath(path);
-  return NextResponse.json({ revalidated: true, path, ts: Date.now() });
+  if (secret !== process.env.REVALIDATE_SECRET) {
+    return NextResponse.json({ error: 'Invalid secret', status: 401 }, { status: 401 });
+  }
+
+  if (path) {
+    revalidatePath(path);
+    return NextResponse.json({ revalidated: true, path, ts: Date.now() });
+  }
+
+  // No path provided — revalidate all known paths (matches v1 caller behavior)
+  ALL_PATHS.forEach((p) => revalidatePath(p));
+  return NextResponse.json({ revalidated: true, paths: ALL_PATHS, ts: Date.now() });
 }

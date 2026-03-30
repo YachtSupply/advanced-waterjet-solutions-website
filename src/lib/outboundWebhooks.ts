@@ -1,59 +1,62 @@
 import crypto from 'crypto';
 import { siteConfig } from '@/site.config';
-import type { BoatworkEventType } from '@/site.config';
 
-export interface OutboundWebhookPayload {
-  event: BoatworkEventType;
-  slug: string;
-  timestamp: string;
-  data?: Record<string, unknown>;
-}
-
-function signPayload(body: string, secret: string): string {
-  return `sha256=${crypto.createHmac('sha256', secret).update(body).digest('hex')}`;
-}
+export type BoatworkEventType =
+  | 'profile.updated'
+  | 'review.created'
+  | 'reviews.new'
+  | 'verification.updated'
+  | 'verification.badge'
+  | 'photo.added'
+  | 'photo.deleted'
+  | 'video.added'
+  | 'video.deleted'
+  | 'badge.awarded'
+  | 'badge.revoked'
+  | 'social.post.published'
+  | 'social.subscription.updated';
 
 export async function fireOutboundWebhooks(
   event: BoatworkEventType,
   slug: string,
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>,
 ): Promise<void> {
-  const hooks = (siteConfig.outboundWebhooks ?? []).filter(
-    (h) => h.enabled && (h.event === '*' || h.event === event)
-  );
-  if (hooks.length === 0) return;
+  const hooks = siteConfig.outboundWebhooks;
+  if (!hooks || hooks.length === 0) return;
 
-  const payload: OutboundWebhookPayload = {
-    event,
-    slug,
-    timestamp: new Date().toISOString(),
-    data,
-  };
-  const body = JSON.stringify(payload);
+  const timestamp = Date.now();
+  const payload = JSON.stringify({ event, slug, data, timestamp });
 
-  await Promise.allSettled(
-    hooks.map(async (hook) => {
+  const requests = hooks
+    .filter((hook) => hook.events.includes('*') || hook.events.includes(event))
+    .map(async (hook) => {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-Boatwork-Event': event,
+        'X-Timestamp': String(timestamp),
+      };
+
+      if (hook.secret) {
+        const sig = crypto.createHmac('sha256', hook.secret).update(payload).digest('hex');
+        headers['X-Signature'] = `sha256=${sig}`;
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
       try {
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-          'X-Boatwork-Event': event,
-          'X-Boatwork-Site': slug,
-        };
-        if (hook.secret) {
-          headers['X-Boatwork-Signature'] = signPayload(body, hook.secret);
-        }
-        const res = await fetch(hook.url, {
+        await fetch(hook.url, {
           method: 'POST',
           headers,
-          body,
-          signal: AbortSignal.timeout(5000),
+          body: payload,
+          signal: controller.signal,
         });
-        if (!res.ok) {
-          console.error(`[outboundWebhook] ${hook.url} returned ${res.status}`);
-        }
       } catch (err) {
-        console.error(`[outboundWebhook] Failed to deliver to ${hook.url}:`, err);
+        console.warn(`[outboundWebhooks] Failed to fire to ${hook.url}:`, err);
+      } finally {
+        clearTimeout(timeoutId);
       }
-    })
-  );
+    });
+
+  await Promise.allSettled(requests);
 }

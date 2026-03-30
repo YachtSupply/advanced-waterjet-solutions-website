@@ -38,3 +38,5 @@ next-env.d.ts
 # NOTE: src/data/generated-content.json is intentionally tracked in git.
 # It is written by scripts/generate-content.mjs before the build and
 # committed so that Vercel can read it without needing ANTHROPIC_API_KEY.
+.next/
+node_modules/

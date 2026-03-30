@@ -1,62 +1,66 @@
 'use client';
-import { useState, useCallback } from 'react';
-import Link from 'next/link';
+
 import Image from 'next/image';
-import { siteConfig } from '@/site.config';
+import { useState } from 'react';
+import clsx from 'clsx';
 
 interface LogoProps {
+  logoUrl: string | null;
+  name: string;
   size?: 'sm' | 'md' | 'lg';
   inverted?: boolean;
-  logoUrl?: string;
-  name?: string;
+  className?: string;
 }
 
-export function Logo({ size = 'md', inverted = false, logoUrl, name }: LogoProps) {
-  // Sizes increased by 20%: sm 36→43, md 44→53, lg 56→67
-  const imgSize = { sm: 43, md: 53, lg: 67 }[size];
-  const textSize = { sm: 'text-lg', md: 'text-xl', lg: 'text-2xl' }[size];
-  const src = logoUrl ?? '';
-  const displayName = name || siteConfig.name;
-  const hasLogo = !!src;
+const sizes = {
+  sm: { container: 32, text: 'text-sm' },
+  md: { container: 40, text: 'text-base' },
+  lg: { container: 56, text: 'text-xl' },
+};
 
-  const [shape, setShape] = useState<'circle' | 'rounded' | 'loading'>('loading');
-  const handleLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.currentTarget;
-    const ratio = img.naturalWidth / img.naturalHeight;
-    setShape(ratio >= 0.75 && ratio <= 1.33 ? 'circle' : 'rounded');
-  }, []);
+export function Logo({ logoUrl, name, size = 'md', inverted = false, className }: LogoProps) {
+  const [error, setError] = useState(false);
+  const { container, text } = sizes[size];
+  const initial = name.charAt(0).toUpperCase();
 
-  const isCircle = shape === 'circle' || shape === 'loading';
+  const showImage = logoUrl && !error;
 
   return (
-    <Link href="/" className="flex items-center gap-3 group">
-      {hasLogo ? (
-        <Image
-          src={src}
-          alt={displayName}
-          width={imgSize}
-          height={imgSize}
-          className={`flex-shrink-0 ${isCircle ? 'rounded-full object-cover' : 'rounded-[8px] object-contain'}`}
-          unoptimized
-          onLoad={handleLoad}
-        />
+    <div
+      className={clsx('flex items-center gap-2 flex-shrink-0', className)}
+      style={{ height: container }}
+    >
+      {showImage ? (
+        <div className="relative" style={{ width: container, height: container }}>
+          <Image
+            src={logoUrl}
+            alt={`${name} logo`}
+            fill
+            sizes={`${container}px`}
+            className="object-contain"
+            onError={() => setError(true)}
+          />
+        </div>
       ) : (
-        <span
-          className={`flex items-center justify-center rounded-full flex-shrink-0 font-serif font-bold ${
-            inverted ? 'bg-gold text-navy' : 'bg-navy text-white'
-          }`}
-          style={{ width: imgSize, height: imgSize, fontSize: imgSize * 0.4 }}
+        <div
+          className={clsx(
+            'flex items-center justify-center rounded font-heading font-bold flex-shrink-0',
+            text,
+            inverted
+              ? 'text-white'
+              : 'text-white',
+          )}
+          style={{
+            width: container,
+            height: container,
+            backgroundColor: inverted
+              ? 'rgba(255,255,255,0.15)'
+              : 'var(--color-primary)',
+          }}
         >
-          {displayName.charAt(0)}
-        </span>
+          {initial}
+        </div>
       )}
-      <span
-        className={`font-serif font-bold tracking-tight ${textSize} ${
-          inverted ? 'text-white' : 'text-navy'
-        } group-hover:text-gold transition-colors`}
-      >
-        {displayName}
-      </span>
-    </Link>
+    </div>
   );
 }

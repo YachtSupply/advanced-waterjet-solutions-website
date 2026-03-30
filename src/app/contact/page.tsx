@@ -1,198 +1,298 @@
-export const dynamic = 'force-dynamic';
 import type { Metadata } from 'next';
-import { GiAnchor } from 'react-icons/gi';
-import { FiPhone, FiMapPin, FiClock, FiFacebook, FiInstagram } from 'react-icons/fi';
 import { getSiteData } from '@/lib/siteData';
 import { formatPhone } from '@/lib/phoneUtils';
-import { ContactForm, SectionWrapper, BoatworkBadge } from '@/components/shared';
+import { ContactForm } from '@/components/shared/ContactForm';
+import { SectionWrapper } from '@/components/shared/SectionWrapper';
+import { ServiceAreaMap } from '@/components/shared/ServiceAreaMap';
+import { BoatworkBadge } from '@/components/shared/BoatworkBadge';
+import {
+  Phone,
+  EnvelopeSimple,
+  MapPin,
+  Clock,
+  FacebookLogo,
+  InstagramLogo,
+  LinkedinLogo,
+  YoutubeLogo,
+} from '@phosphor-icons/react/dist/ssr';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const siteConfig = await getSiteData();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
-  const apiSeo = siteConfig.apiSeo;
+  const site = await getSiteData();
   return {
-    title: apiSeo?.titles?.contact ?? `Contact ${siteConfig.name} | Get a Quote — ${siteConfig.city}, ${siteConfig.state}`,
-    description: apiSeo?.metaDescriptions?.contact ?? `Contact ${siteConfig.name} in ${siteConfig.city}, ${siteConfig.state}. ${siteConfig.phone ? `Call ${siteConfig.phone} or r` : 'R'}equest a quote online.`,
-    alternates: {
-      canonical: apiSeo?.canonicals?.contact ?? (siteUrl ? `${siteUrl}/contact` : '/contact'),
-    },
+    title: `Contact — ${site.name}`,
+    description: `Contact ${site.name}. ${site.phone ? `Call us at ${site.phone}. ` : ''}${site.address || ''}`,
   };
 }
 
 export default async function ContactPage() {
-  const siteConfig = await getSiteData();
-  const phone = formatPhone(siteConfig.phone);
-  const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const formatHours = (h: string) => h === 'Open' ? 'Open All Day' : h;
-  const mapQuery = [siteConfig.address, siteConfig.city, siteConfig.state].filter(Boolean).join(', ');
-  const hasBadge = siteConfig.badges.length > 0 || !!(siteConfig.badge && (siteConfig.badge.svgUrl || siteConfig.badge.embedCode || siteConfig.badge.badgeUrl));
+  const site = await getSiteData();
+  const phone = formatPhone(site.phone);
+
+  const hasSocial =
+    site.social.facebook ||
+    site.social.instagram ||
+    site.social.linkedin ||
+    site.social.youtube;
 
   return (
     <>
-      <section className="bg-hero-gradient text-white py-24 px-4 text-center">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="h-px w-8 bg-gold/60" />
-            <GiAnchor className="text-gold" size={18} />
-            <div className="h-px w-8 bg-gold/60" />
-          </div>
-          <h1 className="font-serif text-5xl font-bold mb-4">Get in Touch</h1>
-          <p className="text-slate-300 font-sans max-w-xl mx-auto">
-            We would love to discuss how we can care for your vessel.
+      {/* ── PAGE HEADER ──────────────────────────────────────────────────── */}
+      <section
+        className="pt-16 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+        style={{ backgroundColor: 'var(--color-primary)' }}
+      >
+        <div
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(45deg, white 0, white 1px, transparent 0, transparent 50%)',
+            backgroundSize: '20px 20px',
+          }}
+          aria-hidden
+        />
+        <div className="relative max-w-7xl mx-auto">
+          <span className="section-label" style={{ color: 'var(--color-accent)' }}>
+            Get in Touch
+          </span>
+          <h1
+            className="font-heading font-extrabold text-5xl sm:text-6xl text-white mb-4"
+            style={{ letterSpacing: '-0.02em' }}
+          >
+            Contact Us
+          </h1>
+          <p className="text-lg max-w-xl" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            Free estimates · Fast response · Work done right. Reach out any time.
           </p>
         </div>
+        <div
+          className="absolute bottom-0 left-0 right-0 h-12 bg-white"
+          style={{ clipPath: 'polygon(0 100%, 100% 0, 100% 100%)' }}
+          aria-hidden
+        />
       </section>
 
-      <div className="gold-rule-full" />
-
-      <SectionWrapper variant="cream">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-          {/* Form */}
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-px w-8 bg-gold/60" />
-              <span className="text-gold text-xs font-sans font-semibold uppercase tracking-widest">Send a Message</span>
-            </div>
-            <h2 className="font-serif text-3xl font-bold text-navy mb-8">Request a Quote</h2>
+      {/* ── FORM + DETAILS ───────────────────────────────────────────────── */}
+      <SectionWrapper variant="white">
+        <div className="grid lg:grid-cols-5 gap-12">
+          {/* Form — larger column */}
+          <div className="lg:col-span-3">
+            <span className="section-label">Send a Message</span>
+            <h2
+              className="font-heading font-extrabold text-3xl sm:text-4xl mb-2"
+              style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}
+            >
+              Let&apos;s Talk
+            </h2>
+            <div className="accent-rule mb-8" />
             <ContactForm />
           </div>
 
-          {/* Info */}
-          <div className="space-y-8">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-px w-8 bg-gold/60" />
-                <span className="text-gold text-xs font-sans font-semibold uppercase tracking-widest">Contact Information</span>
-              </div>
-              <h2 className="font-serif text-3xl font-bold text-navy mb-8">Reach Us Directly</h2>
-            </div>
+          {/* Contact details */}
+          <aside className="lg:col-span-2 space-y-6">
+            <div
+              className="rounded-xl p-6 space-y-5"
+              style={{ backgroundColor: 'var(--color-bg)' }}
+            >
+              <h3
+                className="font-heading font-bold text-lg"
+                style={{ color: 'var(--color-text)' }}
+              >
+                Contact Details
+              </h3>
 
-            <div className="bg-white border border-cream-dark p-8 space-y-6">
-              <div className="flex items-start gap-4">
-                <FiPhone className="text-gold mt-0.5 flex-shrink-0" size={20} />
-                <div>
-                  <p className="text-xs font-sans font-semibold uppercase tracking-widest text-navy mb-1">Phone</p>
-                  <a href={phone?.href ?? `tel:${siteConfig.phone}`} className="text-text font-sans hover:text-gold transition-colors">
-                    {phone?.display ?? siteConfig.phone}
-                  </a>
-                </div>
-              </div>
-
-              <div className="h-px bg-cream-dark" />
-
-              <div className="flex items-start gap-4">
-                <FiMapPin className="text-gold mt-0.5 flex-shrink-0" size={20} />
-                <div>
-                  <p className="text-xs font-sans font-semibold uppercase tracking-widest text-navy mb-1">Location</p>
-                  <p className="text-text font-sans">{siteConfig.address}</p>
-                </div>
-              </div>
-
-              <div className="h-px bg-cream-dark" />
-
-              <div className="flex items-start gap-4">
-                <FiClock className="text-gold mt-0.5 flex-shrink-0" size={20} />
-                <div>
-                  <p className="text-xs font-sans font-semibold uppercase tracking-widest text-navy mb-1">Business Hours</p>
-                  <div className="space-y-1">
-                    {siteConfig.hoursOfOperation && dayOrder.some((d) => !!siteConfig.hoursOfOperation![d])
-                      ? dayOrder.map((day) => {
-                          const hours = siteConfig.hoursOfOperation![day];
-                          if (!hours) return null;
-                          return (
-                            <div key={day} className="flex gap-2 text-sm font-sans">
-                              <span className="text-navy font-semibold w-24">{day}</span>
-                              <span className="text-text">{formatHours(hours)}</span>
-                            </div>
-                          );
-                        })
-                      : <span className="text-text font-sans text-sm">Available 24/7</span>
-                    }
+              {phone && (
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: 'var(--color-accent)', color: 'white' }}
+                  >
+                    <Phone className="w-4 h-4" weight="bold" aria-hidden />
+                  </div>
+                  <div>
+                    <div
+                      className="font-mono text-xs tracking-wide mb-0.5"
+                      style={{ color: 'var(--color-text-light)' }}
+                    >
+                      Phone
+                    </div>
+                    <a
+                      href={phone.href}
+                      className="text-sm font-semibold transition-colors duration-200"
+                      style={{ color: 'var(--color-primary)' }}
+                    >
+                      {phone.display}
+                    </a>
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div className="h-px bg-cream-dark" />
+              {site.email && (
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}
+                  >
+                    <EnvelopeSimple className="w-4 h-4" weight="bold" aria-hidden />
+                  </div>
+                  <div>
+                    <div
+                      className="font-mono text-xs tracking-wide mb-0.5"
+                      style={{ color: 'var(--color-text-light)' }}
+                    >
+                      Email
+                    </div>
+                    <a
+                      href={`mailto:${site.email}`}
+                      className="text-sm font-semibold break-all transition-colors duration-200"
+                      style={{ color: 'var(--color-primary)' }}
+                    >
+                      {site.email}
+                    </a>
+                  </div>
+                </div>
+              )}
 
-              {(siteConfig.social.facebook || siteConfig.social.instagram) && (
-                <div>
-                  <p className="text-xs font-sans font-semibold uppercase tracking-widest text-navy mb-3">Follow Us</p>
-                  <div className="flex gap-4">
-                    {siteConfig.social.facebook && (
-                      <a href={siteConfig.social.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-text hover:text-gold transition-colors text-sm font-sans">
-                        <FiFacebook size={16} /> Facebook
-                      </a>
-                    )}
-                    {siteConfig.social.instagram && (
-                      <a href={siteConfig.social.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-text hover:text-gold transition-colors text-sm font-sans">
-                        <FiInstagram size={16} /> Instagram
-                      </a>
-                    )}
+              {site.address && (
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: 'var(--color-bg-dark)' }}
+                  >
+                    <MapPin
+                      className="w-4 h-4"
+                      weight="bold"
+                      style={{ color: 'var(--color-primary)' }}
+                      aria-hidden
+                    />
+                  </div>
+                  <div>
+                    <div
+                      className="font-mono text-xs tracking-wide mb-0.5"
+                      style={{ color: 'var(--color-text-light)' }}
+                    >
+                      Location
+                    </div>
+                    <span className="text-sm" style={{ color: 'var(--color-text)' }}>
+                      {site.address}
+                    </span>
                   </div>
                 </div>
               )}
             </div>
 
-            {mapQuery && (
-              <div className="bg-white border border-cream-dark overflow-hidden">
-                <iframe
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed&z=14`}
-                  width="100%"
-                  height="220"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title="Location Map"
-                />
-                <div className="px-4 py-3 border-t border-cream-dark">
+            {/* Hours */}
+            <div
+              className="rounded-xl p-6"
+              style={{ backgroundColor: 'var(--color-bg)' }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Clock className="w-4 h-4" style={{ color: 'var(--color-accent)' }} weight="bold" aria-hidden />
+                <h3
+                  className="font-heading font-bold text-base"
+                  style={{ color: 'var(--color-text)' }}
+                >
+                  Business Hours
+                </h3>
+              </div>
+              <div className="space-y-1.5">
+                {Object.entries(site.hoursOfOperation).map(([day, hours]) => (
+                  <div
+                    key={day}
+                    className="flex items-center justify-between text-xs py-1.5 border-b last:border-0"
+                    style={{ borderColor: 'var(--color-bg-dark)' }}
+                  >
+                    <span className="font-mono" style={{ color: 'var(--color-text-light)' }}>
+                      {day}
+                    </span>
+                    <span
+                      style={{
+                        color:
+                          hours === 'Closed' ? 'var(--color-text-light)' : 'var(--color-text)',
+                        fontWeight: hours === 'Closed' ? 400 : 500,
+                      }}
+                    >
+                      {hours}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Social */}
+            {hasSocial && (
+              <div className="flex gap-2">
+                {site.social.facebook && (
                   <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`}
+                    href={site.social.facebook}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-sans font-semibold text-gold hover:text-gold/80 transition-colors flex items-center gap-1"
+                    aria-label="Facebook"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-200"
+                    style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-primary)' }}
                   >
-                    <FiMapPin size={12} /> Get Directions ↗
+                    <FacebookLogo className="w-5 h-5" weight="bold" aria-hidden />
                   </a>
-                </div>
+                )}
+                {site.social.instagram && (
+                  <a
+                    href={site.social.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Instagram"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-200"
+                    style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-primary)' }}
+                  >
+                    <InstagramLogo className="w-5 h-5" weight="bold" aria-hidden />
+                  </a>
+                )}
+                {site.social.linkedin && (
+                  <a
+                    href={site.social.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="LinkedIn"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-200"
+                    style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-primary)' }}
+                  >
+                    <LinkedinLogo className="w-5 h-5" weight="bold" aria-hidden />
+                  </a>
+                )}
+                {site.social.youtube && (
+                  <a
+                    href={site.social.youtube}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="YouTube"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-200"
+                    style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-primary)' }}
+                  >
+                    <YoutubeLogo className="w-5 h-5" weight="bold" aria-hidden />
+                  </a>
+                )}
               </div>
             )}
 
-            {hasBadge && (
-              <div className="bg-white border border-gold/30 p-6 flex items-center justify-between gap-4">
-                <div>
-                  <p className="font-serif font-semibold text-navy mb-1">Verified on Boatwork</p>
-                  <p className="text-text-light font-sans text-xs">Read reviews from real clients</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {siteConfig.badges.length > 0 ? (
-                    siteConfig.badges.map((b, i) => (
-                      <BoatworkBadge
-                        key={b.id ?? i}
-                        profileUrl={b.profileUrl ?? siteConfig.boatwork.profileUrl}
-                        badgeUrl={b.badgeUrl}
-                        svgUrl={b.svgUrl}
-                        embedCode={b.embedCode}
-                      />
-                    ))
-                  ) : (
-                    <BoatworkBadge
-                      profileUrl={siteConfig.badge?.profileUrl ?? siteConfig.boatwork.profileUrl}
-                      badgeUrl={siteConfig.badge?.badgeUrl}
-                      svgUrl={siteConfig.badge?.svgUrl}
-                      embedCode={siteConfig.badge?.embedCode}
-                    />
-                  )}
-                </div>
-              </div>
-            )}
-
-            <p className="text-xs text-text-light font-sans text-center border-t border-cream-dark pt-4">
-              🔒 Your information is kept strictly confidential and never shared.
-            </p>
-          </div>
+            {/* Boatwork badge */}
+            <BoatworkBadge
+              badge={site.badge}
+              profileUrl={site.boatworkProfileUrl}
+              logoUrl={site.boatworkLogoUrl}
+              name={site.name}
+            />
+          </aside>
         </div>
       </SectionWrapper>
+
+      {/* ── MAP ──────────────────────────────────────────────────────────── */}
+      {site.address && (
+        <section className="h-80">
+          <ServiceAreaMap
+            address={site.address}
+            name={site.name}
+            className="w-full h-full"
+          />
+        </section>
+      )}
     </>
   );
 }
