@@ -1,107 +1,105 @@
+export const dynamic = 'force-dynamic';
 import type { Metadata } from 'next';
+import { GiAnchor } from 'react-icons/gi';
 import { getSiteData } from '@/lib/siteData';
-import { SectionWrapper } from '@/components/shared/SectionWrapper';
+import { SectionWrapper } from '@/components/shared';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const site = await getSiteData();
+  const siteConfig = await getSiteData();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
   return {
-    title: `Privacy Policy — ${site.name}`,
-    description: `Privacy policy for ${site.name}.`,
-    robots: { index: false },
+    title: 'Privacy Policy',
+    description: `Privacy Policy for ${siteConfig.name}.`,
+    alternates: {
+      canonical: siteUrl ? `${siteUrl}/privacy` : '/privacy',
+    },
   };
 }
 
 export default async function PrivacyPage() {
-  const site = await getSiteData();
-  const year = new Date().getFullYear();
+  const siteConfig = await getSiteData();
+  const contactEmail = siteConfig.email || 'info@example.com';
 
   return (
     <>
-      {/* ── PAGE HEADER ──────────────────────────────────────────────────── */}
-      <section
-        className="pt-16 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
-        style={{ backgroundColor: 'var(--color-primary)' }}
-      >
-        <div
-          className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(45deg, white 0, white 1px, transparent 0, transparent 50%)',
-            backgroundSize: '20px 20px',
-          }}
-          aria-hidden
-        />
-        <div className="relative max-w-7xl mx-auto">
-          <h1
-            className="font-heading font-extrabold text-5xl sm:text-6xl text-white mb-4"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            Privacy Policy
-          </h1>
-          <p className="text-lg" style={{ color: 'rgba(255,255,255,0.6)' }}>
-            Last updated: {year}
+      <section className="bg-hero-gradient text-white py-24 px-4 text-center">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-gold/60" />
+            <GiAnchor className="text-gold" size={18} />
+            <div className="h-px w-8 bg-gold/60" />
+          </div>
+          <h1 className="font-serif text-5xl font-bold mb-4">Privacy Policy</h1>
+          <p className="text-slate-300 font-sans max-w-xl mx-auto">
+            How {siteConfig.name} collects, uses, and protects your information.
           </p>
         </div>
-        <div
-          className="absolute bottom-0 left-0 right-0 h-12 bg-white"
-          style={{ clipPath: 'polygon(0 100%, 100% 0, 100% 100%)' }}
-          aria-hidden
-        />
       </section>
 
-      {/* ── CONTENT ──────────────────────────────────────────────────────── */}
+      <div className="gold-rule-full" />
+
       <SectionWrapper variant="white">
-        <div className="max-w-3xl mx-auto prose prose-sm">
-          {[
-            {
-              title: 'Information We Collect',
-              body: `We collect information you provide directly to us, such as when you fill out our contact form (name, email, phone number, and message). We may also collect information automatically when you visit our website, including your IP address, browser type, and pages visited.`,
-            },
-            {
-              title: 'How We Use Your Information',
-              body: `We use the information we collect to respond to your inquiries, provide our services, send you updates or promotional materials (with your consent), and improve our website and services.`,
-            },
-            {
-              title: 'Information Sharing',
-              body: `We do not sell, trade, or rent your personal information to third parties. We may share your information with trusted service providers who assist us in operating our website and conducting our business, subject to confidentiality agreements.`,
-            },
-            {
-              title: 'Data Security',
-              body: `We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.`,
-            },
-            {
-              title: 'Cookies',
-              body: `We may use cookies and similar tracking technologies to enhance your experience on our website. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent.`,
-            },
-            {
-              title: 'Third-Party Links',
-              body: `Our website may contain links to third-party websites. We are not responsible for the privacy practices of those sites and encourage you to review their privacy policies.`,
-            },
-            {
-              title: 'Your Rights',
-              body: `You have the right to access, correct, or delete your personal information. To exercise these rights, please contact us using the information below.`,
-            },
-            {
-              title: 'Contact Us',
-              body: `If you have questions about this Privacy Policy, please contact us at:\n\n${site.name}\n${site.address || ''}\n${site.email || ''}\n${site.phone || ''}`,
-            },
-          ].map(({ title, body }) => (
-            <div key={title} className="mb-8">
-              <h2
-                className="font-heading font-bold text-xl mb-3"
-                style={{ color: 'var(--color-text)' }}
-              >
-                {title}
-              </h2>
-              <div className="accent-rule" />
-              <p
-                className="text-sm leading-relaxed whitespace-pre-line"
-                style={{ color: 'var(--color-text-light)' }}
-              >
-                {body}
-              </p>
-            </div>
-          ))}
+        <div className="max-w-3xl mx-auto prose prose-sm font-sans text-text">
+          <p className="text-text-light text-sm mb-8">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+
+          <h2 className="font-serif text-2xl font-bold text-navy mt-8 mb-3">1. Who We Are</h2>
+          <p>
+            {siteConfig.name} (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is a marine services business located in {siteConfig.city}, {siteConfig.state}.
+            This Privacy Policy explains how we handle personal information collected through our website.
+          </p>
+
+          <h2 className="font-serif text-2xl font-bold text-navy mt-8 mb-3">2. Information We Collect</h2>
+          <p>We may collect the following types of information:</p>
+          <ul className="list-disc pl-6 space-y-2 mt-3">
+            <li><strong>Contact form submissions</strong> — your name, email address, phone number, and message when you reach out to us.</li>
+            <li><strong>Usage data</strong> — anonymous analytics data (pages visited, browser type, referring site) collected via Google Analytics to help us improve this website.</li>
+            <li><strong>Cookies</strong> — Google Analytics places cookies on your device to distinguish unique visitors. You may disable cookies in your browser settings.</li>
+          </ul>
+
+          <h2 className="font-serif text-2xl font-bold text-navy mt-8 mb-3">3. How We Use Your Information</h2>
+          <p>We use the information we collect to:</p>
+          <ul className="list-disc pl-6 space-y-2 mt-3">
+            <li>Respond to your inquiries and provide quotes for our services.</li>
+            <li>Improve the content and usability of our website.</li>
+            <li>Contact you regarding your service request.</li>
+          </ul>
+
+          <h2 className="font-serif text-2xl font-bold text-navy mt-8 mb-3">4. We Do Not Sell Your Data</h2>
+          <p>
+            We do not sell, rent, or trade your personal information to any third parties. Your contact details are used solely to respond to your inquiry and deliver the services you request.
+          </p>
+
+          <h2 className="font-serif text-2xl font-bold text-navy mt-8 mb-3">5. Third-Party Services</h2>
+          <p>
+            Our website uses Google Analytics to understand site traffic. Google Analytics may collect anonymized data about your visit. You can opt out via the{' '}
+            <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-gold hover:text-gold-light transition-colors underline">
+              Google Analytics Opt-out Browser Add-on
+            </a>.
+          </p>
+
+          <h2 className="font-serif text-2xl font-bold text-navy mt-8 mb-3">6. Data Retention</h2>
+          <p>
+            Contact form submissions are retained for as long as needed to respond to your inquiry or as required by applicable law. Analytics data is retained per Google Analytics default settings.
+          </p>
+
+          <h2 className="font-serif text-2xl font-bold text-navy mt-8 mb-3">7. Your Rights</h2>
+          <p>
+            You may request access to, correction of, or deletion of any personal data we hold about you by contacting us at the email below. We will respond within a reasonable timeframe.
+          </p>
+
+          <h2 className="font-serif text-2xl font-bold text-navy mt-8 mb-3">8. Contact Us</h2>
+          <p>
+            For any privacy-related questions or requests, please contact us at:{' '}
+            <a href={`mailto:${contactEmail}`} className="text-gold hover:text-gold-light transition-colors underline">
+              {contactEmail}
+            </a>
+          </p>
+
+          <div className="mt-10 border-t border-cream-dark pt-6">
+            <p className="text-text-light text-xs">
+              This policy applies to the website of {siteConfig.name} and does not govern third-party websites that may be linked from our pages.
+            </p>
+          </div>
         </div>
       </SectionWrapper>
     </>

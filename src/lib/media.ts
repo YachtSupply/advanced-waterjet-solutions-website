@@ -1,29 +1,31 @@
 /**
- * Returns true if the URL is a video file based on its extension.
+ * Media configuration for boatwork-websites S3 bucket.
+ * All customer website assets are stored here, separate from boatwork-images.
+ *
+ * Bucket: boatwork-websites
+ * Structure: /<site-slug>/<type>/<filename>
+ *   - /<slug>/portfolio/*.{jpg,png,mp4}
+ *   - /<slug>/videos/*.mp4
+ *   - /<slug>/logo/*
  */
-export function isVideoUrl(url: string): boolean {
-  return /\.(mp4|webm|ogg|mov|avi|mkv)(\?.*)?$/i.test(url);
+
+export const MEDIA_BASE_URL = 'https://boatwork-websites.s3.us-east-1.amazonaws.com';
+export const MEDIA_BUCKET = 'boatwork-websites';
+export const MEDIA_REGION = 'us-east-1';
+
+/**
+ * Build a full S3 URL for a customer media asset.
+ * @param slug   - The site slug (e.g. "yachts-etc")
+ * @param type   - Asset type: "portfolio" | "videos" | "logo"
+ * @param file   - Filename (e.g. "photo-01.jpg")
+ */
+export function mediaUrl(slug: string, type: 'portfolio' | 'videos' | 'logo', file: string): string {
+  return `${MEDIA_BASE_URL}/${slug}/${type}/${file}`;
 }
 
 /**
- * Returns true if the URL is an image file.
+ * Check if a URL is a boatwork-websites S3 asset.
  */
-export function isImageUrl(url: string): boolean {
-  return /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?.*)?$/i.test(url);
-}
-
-/**
- * Returns a thumbnail URL for a Vimeo or YouTube video, or null.
- */
-export function getVideoThumbnail(src: string): string | null {
-  // YouTube
-  const ytMatch = src.match(
-    /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/,
-  );
-  if (ytMatch) {
-    return `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
-  }
-
-  // Vimeo (async thumbnail not available here — return null)
-  return null;
+export function isMediaUrl(url: string): boolean {
+  return url.startsWith(MEDIA_BASE_URL);
 }

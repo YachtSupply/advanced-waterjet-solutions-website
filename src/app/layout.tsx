@@ -1,92 +1,102 @@
-import type { Metadata } from 'next';
-import { Inter, Syne, Syne_Mono } from 'next/font/google';
-import './globals.css';
+import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import { getSiteData } from '@/lib/siteData';
 import { getProfileSlug } from '@/lib/config';
-import { Navbar } from '@/components/shared/Navbar';
-import { Footer } from '@/components/shared/Footer';
+import { Navbar, Footer } from '@/components/shared';
+import './globals.css';
 
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-inter',
-  display: 'swap',
-});
+// When BOATWORK_URL is set (production), the theme is served dynamically via
+// the CSS endpoint and the data-theme attribute is omitted. In local dev
+// (BOATWORK_URL not set), data-theme provides a static fallback.
+const BOATWORK_URL = process.env.BOATWORK_URL ?? '';
 
-const syne = Syne({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-syne',
-  display: 'swap',
-});
+const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? 'G-W1RXJPGQVB';
 
-const syneMono = Syne_Mono({
-  subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-syne-mono',
-  display: 'swap',
-});
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
 
 export async function generateMetadata(): Promise<Metadata> {
-  const site = await getSiteData();
-
+  const data = await getSiteData();
   return {
-    title: {
-      template: site.seo.titleTemplate,
-      default: site.seo.defaultTitle,
+    icons: {
+      icon: '/favicon.ico',
+      apple: '/apple-touch-icon.png',
+      other: [
+        { rel: 'icon', url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { rel: 'icon', url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+      ],
     },
-    description: site.seo.description,
-    keywords: site.seo.keywords,
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://advanced-waterjet-solutions-pro.boatwork.co'),
-    openGraph: {
-      type: 'website',
-      siteName: site.name,
-      title: site.seo.defaultTitle,
-      description: site.seo.description,
-    },
-    twitter: {
-      card: 'summary_large_image',
+    title: { template: data.seo.titleTemplate, default: data.seo.defaultTitle },
+    description: data.seo.description,
+    keywords: data.seo.keywords,
+    alternates: {
+      canonical: process.env.NEXT_PUBLIC_SITE_URL ?? '/',
     },
   };
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const site = await getSiteData();
+  const data = await getSiteData();
+  const profileSlug = getProfileSlug();
+  const themeCssUrl = BOATWORK_URL
+    ? `${BOATWORK_URL}/api/v1/public/contractors/${profileSlug}/theme.css`
+    : null;
 
-  const hasPortfolio = site.portfolio.length > 0;
-  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const jsonLd = data.apiSeo?.jsonLd ?? {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: data.name,
+    description: data.description,
+    telephone: data.phone,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: data.city,
+      addressRegion: data.state,
+      addressCountry: 'US',
+    },
+    image: data.logoUrl || undefined,
+    sameAs: [
+      data.social.facebook,
+      data.social.instagram,
+      data.social.linkedin,
+      data.social.youtube,
+      data.boatwork.profileUrl,
+    ].filter(Boolean),
+  };
 
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${syne.variable} ${syneMono.variable}`}
-    >
+    <html lang="en" {...(!themeCssUrl ? { 'data-theme': data.websiteTheme || 'navy-gold' } : {})}>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
+          href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:wght@400..900&display=swap"
           rel="stylesheet"
-          href={`https://boatwork.co/api/v1/public/contractors/${getProfileSlug()}/theme.css`}
         />
-        {gaId && (
-          <>
-            <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`,
-              }}
-            />
-          </>
+        {themeCssUrl && (
+          <link rel="stylesheet" href={themeCssUrl} />
         )}
-      </head>
-      <body className="font-body antialiased">
-        <Navbar
-          logoUrl={site.logoUrl}
-          name={site.name}
-          hasPortfolio={hasPortfolio}
-          phone={site.phone}
-          boatworkProfileUrl={site.boatworkProfileUrl}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+      </head>
+      <body className="font-sans bg-cream">
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_ID}');`}
+        </Script>
+        <Navbar logoUrl={data.logoUrl} name={data.name} hasPortfolio={data.portfolio.length > 0 || data.videos.length > 0} phone={data.phone} />
         <main>{children}</main>
-        <Footer site={site} />
+        <Footer />
       </body>
     </html>
   );

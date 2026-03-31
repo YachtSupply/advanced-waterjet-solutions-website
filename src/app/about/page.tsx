@@ -1,252 +1,201 @@
+export const dynamic = 'force-dynamic';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { GiAnchor } from 'react-icons/gi';
+import { FiArrowRight, FiMapPin } from 'react-icons/fi';
 import { getSiteData } from '@/lib/siteData';
-import { formatPhone } from '@/lib/phoneUtils';
-import { SectionWrapper } from '@/components/shared/SectionWrapper';
-import { BoatworkBadge } from '@/components/shared/BoatworkBadge';
-import {
-  ArrowRight,
-  Phone,
-  MapPin,
-  CalendarBlank,
-  ShieldCheck,
-  Star,
-} from '@phosphor-icons/react/dist/ssr';
+import { SectionWrapper, BoatworkVerifiedBadge, SmartLogo } from '@/components/shared';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const site = await getSiteData();
+  const siteConfig = await getSiteData();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+  const apiSeo = siteConfig.apiSeo;
+  const primaryService = siteConfig.services[0]?.name ?? 'Marine Services';
+  const firstDesc = siteConfig.description ? siteConfig.description.match(/^[^.!?]+[.!?]/)?.[0] ?? '' : '';
   return {
-    title: `About — ${site.name}`,
-    description: `Learn about ${site.name}. ${site.tagline}`,
+    title: apiSeo?.titles?.about ?? `About ${siteConfig.name} — ${primaryService} in ${siteConfig.city}, ${siteConfig.state}`,
+    description: apiSeo?.metaDescriptions?.about ?? `Learn about ${siteConfig.name}, serving ${siteConfig.city} boat owners${siteConfig.yearEstablished ? ` since ${siteConfig.yearEstablished}` : ''}. ${firstDesc}`.trim(),
+    alternates: {
+      canonical: apiSeo?.canonicals?.about ?? (siteUrl ? `${siteUrl}/about` : '/about'),
+    },
   };
 }
 
+function formatAbout(text: string) {
+  if (!text) return null;
+
+  const paragraphs = text
+    .split(/\n{2,}/)
+    .map((p) => p.replace(/\n/g, ' ').trim())
+    .filter(Boolean);
+
+  if (paragraphs.length <= 1) {
+    return (
+      <div className="mb-6">
+        <p className="text-text font-sans leading-relaxed">{text}</p>
+      </div>
+    );
+  }
+
+  const first = paragraphs[0];
+  const rest = paragraphs.slice(1);
+
+  return (
+    <div className="mb-6">
+      <p className="text-text font-sans leading-relaxed mb-4">{first}</p>
+      <details className="group">
+        <summary className="cursor-pointer list-none text-gold font-sans text-sm font-semibold uppercase tracking-widest hover:text-gold-light transition-colors mb-3 inline-block border-b border-gold/40 pb-0.5 select-none">
+          <span className="group-open:hidden">Read more</span>
+          <span className="hidden group-open:inline">Show less</span>
+        </summary>
+        <div className="about-accordion overflow-hidden transition-[max-height] duration-300 ease-in-out">
+          {rest.map((p, i) => (
+            <p key={i} className="text-text font-sans leading-relaxed mb-4">{p}</p>
+          ))}
+        </div>
+      </details>
+      <style>{`
+        .about-accordion { display: block !important; max-height: 0; }
+        details[open] .about-accordion { max-height: 3000px; }
+      `}</style>
+    </div>
+  );
+}
+
 export default async function AboutPage() {
-  const site = await getSiteData();
-  const phone = formatPhone(site.phone);
+  const siteConfig = await getSiteData();
+
+  const reviews = siteConfig.boatwork.staticReviews;
+  const avgRating = reviews.length > 0
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    : 5;
 
   return (
     <>
-      {/* ── PAGE HEADER ──────────────────────────────────────────────────── */}
-      <section
-        className="pt-16 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
-        style={{ backgroundColor: 'var(--color-primary)' }}
-      >
-        <div
-          className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(45deg, white 0, white 1px, transparent 0, transparent 50%)',
-            backgroundSize: '20px 20px',
-          }}
-          aria-hidden
-        />
-        <div className="relative max-w-7xl mx-auto">
-          <span className="section-label" style={{ color: 'var(--color-accent)' }}>
-            Our Story
-          </span>
-          <h1
-            className="font-heading font-extrabold text-5xl sm:text-6xl text-white mb-4"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            About {site.name}
-          </h1>
-          <p className="text-lg max-w-2xl" style={{ color: 'rgba(255,255,255,0.7)' }}>
-            {site.tagline}
-          </p>
+      {/* Hero */}
+      <section className="bg-hero-gradient text-white py-24 px-4 text-center">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-gold/60" />
+            <GiAnchor className="text-gold" size={18} />
+            <div className="h-px w-8 bg-gold/60" />
+          </div>
+          <h1 className="font-serif text-5xl font-bold mb-4">{siteConfig.name}</h1>
+          <p className="text-gold-light font-serif text-xl italic mb-4">{siteConfig.tagline}</p>
+          {siteConfig.yearEstablished && (
+            <p className="text-slate-300 font-sans text-sm uppercase tracking-widest">
+              Serving {siteConfig.city} since {siteConfig.yearEstablished}
+            </p>
+          )}
         </div>
-        <div
-          className="absolute bottom-0 left-0 right-0 h-12 bg-white"
-          style={{ clipPath: 'polygon(0 100%, 100% 0, 100% 100%)' }}
-          aria-hidden
-        />
       </section>
 
-      {/* ── ABOUT BODY ───────────────────────────────────────────────────── */}
+      <div className="gold-rule-full" />
+
+      {/* About content */}
       <SectionWrapper variant="white">
-        <div className="grid lg:grid-cols-3 gap-12">
-          {/* Main about text */}
-          <div className="lg:col-span-2">
-            <span className="section-label">Who We Are</span>
-            <h2
-              className="font-heading font-extrabold text-3xl sm:text-4xl mb-4"
-              style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}
-            >
-              Professionals You Can Trust
-            </h2>
-            <div className="accent-rule" />
-            <div className="prose prose-sm max-w-none">
-              {site.about.split('\n').map((para, i) => (
-                <p
-                  key={i}
-                  className="text-base leading-relaxed mb-4"
-                  style={{ color: 'var(--color-text-light)' }}
-                >
-                  {para}
-                </p>
-              ))}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-px w-8 bg-gold/60" />
+              <span className="text-gold text-xs font-sans font-semibold uppercase tracking-widest">Our Story</span>
             </div>
+            <h2 className="font-serif text-4xl font-bold text-navy mb-6">About Our Business</h2>
+            {siteConfig.yearEstablished && (
+              <p className="text-gold font-sans text-sm font-semibold uppercase tracking-widest mb-4">
+                Serving {siteConfig.city} since {siteConfig.yearEstablished}
+              </p>
+            )}
+            {formatAbout(siteConfig.about)}
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 whitespace-nowrap bg-navy text-white font-sans font-semibold px-8 py-4 hover:bg-navy/80 transition-colors uppercase tracking-widest text-sm mt-2"
+            >
+              Get a Quote <FiArrowRight size={14} className="flex-shrink-0 inline-block" />
+            </Link>
           </div>
 
-          {/* Sidebar */}
-          <aside className="space-y-6">
-            {/* Stats card */}
-            <div
-              className="rounded-xl p-6 space-y-4"
-              style={{ backgroundColor: 'var(--color-bg)' }}
-            >
-              {site.yearEstablished && (
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}
-                  >
-                    <CalendarBlank className="w-5 h-5" weight="bold" aria-hidden />
+          <div className="space-y-8">
+            {/* Logo + badge panel */}
+            <div className="bg-cream border border-cream-dark p-8 flex flex-col items-center text-center">
+              <div className="mb-6">
+                <SmartLogo
+                  src={siteConfig.logoUrl}
+                  alt={siteConfig.name}
+                  size={120}
+                  fallbackInitial={siteConfig.name.charAt(0)}
+                  fallbackClassName="bg-navy text-white"
+                />
+              </div>
+              {reviews.length > 0 ? (
+                <>
+                  <div className="flex mb-3">
+                    {[1,2,3,4,5].map((i) => (
+                      <span key={i} className={`text-xl ${i <= Math.round(avgRating) ? 'text-gold' : 'text-gray-300'}`}>★</span>
+                    ))}
                   </div>
-                  <div>
-                    <div className="font-mono text-xs tracking-wide" style={{ color: 'var(--color-text-light)' }}>
-                      Est.
-                    </div>
-                    <div className="font-heading font-bold text-lg" style={{ color: 'var(--color-text)' }}>
-                      {site.yearEstablished}
-                    </div>
-                  </div>
-                </div>
+                  <p className="font-serif text-lg text-navy mb-2">{avgRating.toFixed(1)} Star Rated on Boatwork</p>
+                  <p className="text-text-light font-sans text-sm mb-6">Verified reviews from real boat owners</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-serif text-lg text-navy mb-2">New on Boatwork</p>
+                  <p className="text-text-light font-sans text-sm mb-6">No reviews yet — be one of the first</p>
+                </>
               )}
-
-              {site.rating && (
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: 'var(--color-accent)', color: 'white' }}
-                  >
-                    <Star className="w-5 h-5" weight="fill" aria-hidden />
-                  </div>
-                  <div>
-                    <div className="font-mono text-xs tracking-wide" style={{ color: 'var(--color-text-light)' }}>
-                      Rating
-                    </div>
-                    <div className="font-heading font-bold text-lg" style={{ color: 'var(--color-text)' }}>
-                      {site.rating.toFixed(1)} / 5.0
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {site.isVerified && (
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: 'var(--color-primary-light)', color: 'white' }}
-                  >
-                    <ShieldCheck className="w-5 h-5" weight="fill" aria-hidden />
-                  </div>
-                  <div>
-                    <div className="font-mono text-xs tracking-wide" style={{ color: 'var(--color-text-light)' }}>
-                      Status
-                    </div>
-                    <div className="font-heading font-bold text-base" style={{ color: 'var(--color-text)' }}>
-                      Boatwork Verified Pro
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {site.address && (
-                <div className="flex items-start gap-3">
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: 'var(--color-bg-dark)' }}
-                  >
-                    <MapPin
-                      className="w-5 h-5"
-                      weight="bold"
-                      style={{ color: 'var(--color-primary)' }}
-                      aria-hidden
-                    />
-                  </div>
-                  <div>
-                    <div className="font-mono text-xs tracking-wide mb-0.5" style={{ color: 'var(--color-text-light)' }}>
-                      Location
-                    </div>
-                    <div className="text-sm" style={{ color: 'var(--color-text)' }}>
-                      {site.address}
-                    </div>
-                  </div>
-                </div>
-              )}
+              <BoatworkVerifiedBadge
+                size="sm"
+                badgeUrl={siteConfig.badge?.badgeUrl}
+                svgUrl={siteConfig.badge?.svgUrl}
+                embedCode={siteConfig.badge?.embedCode}
+                pixelUrl={siteConfig.badge?.pixelUrl}
+                profileUrl={siteConfig.badge?.profileUrl}
+              />
             </div>
 
-            {/* Boatwork badge */}
-            <BoatworkBadge
-              badge={site.badge}
-              profileUrl={site.boatworkProfileUrl}
-              logoUrl={site.boatworkLogoUrl}
-              name={site.name}
-            />
-
-            {/* CTA */}
-            <div
-              className="rounded-xl p-6 text-center"
-              style={{ backgroundColor: 'var(--color-primary)' }}
-            >
-              <p className="text-sm font-body mb-4" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                Ready to work together?
-              </p>
-              <Link href="/contact" className="btn-primary text-sm w-full justify-center">
-                Get in Touch
-                <ArrowRight className="w-4 h-4" weight="bold" aria-hidden />
-              </Link>
-              {phone && (
-                <a
-                  href={phone.href}
-                  className="mt-3 flex items-center justify-center gap-1.5 text-sm"
-                  style={{ color: 'rgba(255,255,255,0.6)' }}
-                >
-                  <Phone className="w-4 h-4" weight="bold" aria-hidden />
-                  {phone.display}
-                </a>
-              )}
+            {/* Service area */}
+            <div className="bg-cream border border-cream-dark p-8">
+              <div className="flex items-center gap-3 mb-4">
+                <FiMapPin className="text-gold" size={18} />
+                <span className="text-gold text-xs font-sans font-semibold uppercase tracking-widest">Coverage Area</span>
+              </div>
+              <h3 className="font-serif text-xl font-bold text-navy mb-4">{siteConfig.serviceAreaTitle}</h3>
+              <p className="text-text-light font-sans text-sm mb-4">{siteConfig.serviceAreaDescription}</p>
+              <ul className="space-y-2">
+                {siteConfig.serviceArea.map((a) => (
+                  <li key={a} className="flex items-center gap-3 font-sans text-text text-sm">
+                    <span className="w-1.5 h-1.5 bg-gold rounded-full flex-shrink-0" />
+                    <span>{a}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </aside>
+          </div>
         </div>
       </SectionWrapper>
 
-      {/* ── SERVICE AREA ─────────────────────────────────────────────────── */}
-      {site.serviceArea.length > 0 && (
-        <SectionWrapper variant="sand" id="service-area">
-          <div className="text-center mb-10">
-            <span className="section-label">{site.serviceAreaTitle}</span>
-            <h2
-              className="font-heading font-extrabold text-3xl sm:text-4xl"
-              style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}
-            >
-              Areas We Serve
-            </h2>
-            <div className="accent-rule mx-auto mt-4" />
-            <p className="text-sm mt-4 max-w-xl mx-auto" style={{ color: 'var(--color-text-light)' }}>
-              {site.serviceAreaDescription}
-            </p>
+      <div className="gold-rule-full" />
+
+      {/* CTA */}
+      <SectionWrapper variant="navy">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="h-px w-12 bg-gold/40" />
+            <GiAnchor className="text-gold" size={20} />
+            <div className="h-px w-12 bg-gold/40" />
           </div>
-          <div className="flex flex-wrap gap-2 justify-center max-w-3xl mx-auto">
-            {site.serviceArea.map((area) => (
-              <div
-                key={area}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm"
-                style={{ backgroundColor: 'white', color: 'var(--color-text)' }}
-              >
-                <MapPin
-                  className="w-3.5 h-3.5 flex-shrink-0"
-                  weight="fill"
-                  style={{ color: 'var(--color-accent)' }}
-                  aria-hidden
-                />
-                {area}
-              </div>
-            ))}
-          </div>
-        </SectionWrapper>
-      )}
+          <h2 className="font-serif text-4xl font-bold mb-4">Ready to Work Together?</h2>
+          <p className="text-slate-300 font-sans mb-8 max-w-xl mx-auto">
+            Contact our team today to discuss your vessel and get a personalized quote.
+          </p>
+          <Link
+            href="/contact"
+            className="inline-block bg-gold text-navy font-sans font-bold px-10 py-4 hover:bg-gold-light transition-colors uppercase tracking-widest text-sm whitespace-nowrap"
+          >
+            Get a Quote
+          </Link>
+        </div>
+      </SectionWrapper>
     </>
   );
 }

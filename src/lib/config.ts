@@ -10,7 +10,7 @@ const bw = (): Record<string, any> => {
 };
 
 export function getProfileSlug(): string {
-  return process.env.BOATWORK_PROFILE_SLUG || bw().profileSlug || 'template';
+  return bw().profileSlug || 'template';
 }
 
 export function getProfileId(): string {
@@ -18,8 +18,7 @@ export function getProfileId(): string {
 }
 
 export function getProfileUrl(): string {
-  const slug = getProfileSlug();
-  return bw().profileUrl || `https://boatwork.co/pro/${slug}/`;
+  return bw().profileUrl || '';
 }
 
 export function getBoatworkLogoUrl(): string {
@@ -41,8 +40,4 @@ export function getBoatworkConfig(): Record<string, any> {
     useLiveReviews: b.useLiveReviews || false,
     staticReviews: b.staticReviews || [],
   };
-}
-
-export function getSiteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL || 'https://advanced-waterjet-solutions-pro.boatwork.co';
 }

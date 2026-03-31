@@ -1,95 +1,71 @@
+export const dynamic = 'force-dynamic';
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { GiAnchor } from 'react-icons/gi';
 import { getSiteData } from '@/lib/siteData';
-import { PortfolioGrid } from '@/components/shared/PortfolioGrid';
-import { SectionWrapper } from '@/components/shared/SectionWrapper';
-import { ArrowRight } from '@phosphor-icons/react/dist/ssr';
+import { SectionWrapper, PortfolioGrid } from '@/components/shared';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const site = await getSiteData();
+  const siteConfig = await getSiteData();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+  const apiSeo = siteConfig.apiSeo;
   return {
-    title: `Portfolio — ${site.name}`,
-    description: `Browse project photos and videos from ${site.name}.`,
+    title: apiSeo?.titles?.portfolio ?? `Our Work | ${siteConfig.name} — ${siteConfig.city}, ${siteConfig.state}`,
+    description: apiSeo?.metaDescriptions?.portfolio ?? `See recent work by ${siteConfig.name} — marine service projects in ${siteConfig.city}, ${siteConfig.state}.`,
+    alternates: {
+      canonical: apiSeo?.canonicals?.portfolio ?? (siteUrl ? `${siteUrl}/portfolio` : '/portfolio'),
+    },
   };
 }
 
 export default async function PortfolioPage() {
-  const site = await getSiteData();
+  const siteConfig = await getSiteData();
 
-  if (site.portfolio.length === 0) {
+  if (siteConfig.portfolio.length === 0 && siteConfig.videos.length === 0) {
     redirect('/');
   }
 
   return (
     <>
-      {/* ── PAGE HEADER ──────────────────────────────────────────────────── */}
-      <section
-        className="pt-16 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
-        style={{ backgroundColor: 'var(--color-primary)' }}
-      >
-        <div
-          className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(45deg, white 0, white 1px, transparent 0, transparent 50%)',
-            backgroundSize: '20px 20px',
-          }}
-          aria-hidden
-        />
-        <div className="relative max-w-7xl mx-auto">
-          <span className="section-label" style={{ color: 'var(--color-accent)' }}>
-            Project Gallery
-          </span>
-          <h1
-            className="font-heading font-extrabold text-5xl sm:text-6xl text-white mb-4"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            Our Work
-          </h1>
-          <p className="text-lg max-w-xl" style={{ color: 'rgba(255,255,255,0.7)' }}>
-            Real projects, real results. Browse our portfolio of completed marine work.
+      <section className="bg-hero-gradient text-white py-24 px-4 text-center">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-gold/60" />
+            <GiAnchor className="text-gold" size={18} />
+            <div className="h-px w-8 bg-gold/60" />
+          </div>
+          <h1 className="font-serif text-5xl font-bold mb-4">Our Work</h1>
+          <p className="text-slate-300 font-sans max-w-xl mx-auto">
+            A selection of recent projects from {siteConfig.name}.
           </p>
         </div>
-        <div
-          className="absolute bottom-0 left-0 right-0 h-12 bg-[var(--color-bg)]"
-          style={{ clipPath: 'polygon(0 100%, 100% 0, 100% 100%)' }}
-          aria-hidden
-        />
       </section>
 
-      {/* ── GRID ─────────────────────────────────────────────────────────── */}
-      <SectionWrapper variant="sand">
-        <PortfolioGrid items={site.portfolio} businessName={site.name} />
+      <div className="gold-rule-full" />
+
+      <SectionWrapper variant="cream">
+        <div className="text-center mb-12">
+          <h2 className="font-serif text-3xl font-bold text-navy mb-4">Recent Projects</h2>
+          <p className="text-text-light font-sans max-w-xl mx-auto">
+            Click any image to view full size. Every project handled with the highest standards of care.
+          </p>
+        </div>
+        <PortfolioGrid items={siteConfig.portfolio} videos={siteConfig.videos} businessName={siteConfig.name} />
       </SectionWrapper>
 
-      {/* ── CTA ──────────────────────────────────────────────────────────── */}
-      <SectionWrapper variant="white">
-        <div className="text-center max-w-xl mx-auto">
-          <span className="section-label">Get Started</span>
-          <h2
-            className="font-heading font-extrabold text-3xl sm:text-4xl mb-4"
-            style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}
+      <div className="gold-rule-full" />
+
+      <SectionWrapper variant="navy">
+        <div className="text-center">
+          <h2 className="font-serif text-3xl font-bold mb-4">Ready to Discuss Your Vessel?</h2>
+          <p className="text-slate-300 font-sans mb-8">Let&apos;s talk about what your yacht needs.</p>
+          <Link
+            href="/contact"
+            className="inline-block bg-gold text-navy font-sans font-bold px-10 py-4 hover:bg-gold-light transition-colors uppercase tracking-widest text-sm whitespace-nowrap"
           >
-            Ready for Your Project?
-          </h2>
-          <p className="text-sm mb-6" style={{ color: 'var(--color-text-light)' }}>
-            Let&apos;s talk about your vessel and what you&apos;d like to achieve.
-          </p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            <a
-              href={site.boatworkProfileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary"
-            >
-              Request a Quote
-              <ArrowRight className="w-4 h-4" weight="bold" aria-hidden />
-            </a>
-            <Link href="/contact" className="btn-outline">
-              Contact Us
-            </Link>
-          </div>
+            Request a Quote
+          </Link>
         </div>
       </SectionWrapper>
     </>

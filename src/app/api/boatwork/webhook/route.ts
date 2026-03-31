@@ -1,24 +1,33 @@
+/**
+ * POST /api/boatwork/webhook
+ *
+ * Receives inbound webhooks from Boatwork.co when the contractor's profile
+ * is updated. Handles:
+ *   - profile.updated       — new photos, services, about copy changed
+ *   - reviews.new           — new review posted
+ *   - verification.updated  — domain or email verification status changed
+ *   - verification.badge    — Boatwork Verified Pro badge status updated
+ *
+ * Boatwork.co sends:
+ *   POST /api/boatwork/webhook
+ *   Header: x-boatwork-signature: sha256=<hmac>
+ *   Body: { event, slug, data, timestamp }
+ *
+ * To register this webhook on Boatwork.co, the site owner provides:
+ *   Webhook URL: https://<your-domain>/api/boatwork/webhook
+ *   Secret: value of BOATWORK_WEBHOOK_SECRET env var
+ */
+
+import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { NextRequest, NextResponse } from 'next/server';
-import { fireOutboundWebhooks, type BoatworkEventType } from '@/lib/outboundWebhooks';
-import { getSiteUrl } from '@/lib/config';
+import { fireOutboundWebhooks } from '@/lib/outboundWebhooks';
+import type { BoatworkEventType } from '@/site.config';
 
-const PROFILE_UPDATE_EVENTS = new Set([
-  'profile.updated',
-  'review.created',
-  'reviews.new',
-  'verification.updated',
-  'verification.badge',
-  'photo.added',
-  'photo.deleted',
-  'video.added',
-  'video.deleted',
-  'badge.awarded',
-  'badge.revoked',
-]);
+const WEBHOOK_SECRET = process.env.BOATWORK_WEBHOOK_SECRET ?? '';
 
-function verifySignature(body: string, signature: string, secret: string): boolean {
-  const expected = `sha256=${crypto.createHmac('sha256', secret).update(body).digest('hex')}`;
+function verifySignature(body: string, signature: string): boolean {
+  if (!WEBHOOK_SECRET) return true; // Skip verification in dev if no secret set
+  const expected = `sha256=${crypto.createHmac('sha256', WEBHOOK_SECRET).update(body).digest('hex')}`;
   try {
     return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
   } catch {
@@ -26,50 +35,65 @@ function verifySignature(body: string, signature: string, secret: string): boole
   }
 }
 
-export async function POST(request: NextRequest) {
-  const rawBody = await request.text();
-  const signature = request.headers.get('x-boatwork-signature') || '';
-  const webhookSecret = process.env.BOATWORK_WEBHOOK_SECRET;
+export async function POST(req: Request) {
+  const rawBody = await req.text();
+  const signature = req.headers.get('x-boatwork-signature') ?? '';
 
-  if (webhookSecret) {
-    if (!signature || !verifySignature(rawBody, signature, webhookSecret)) {
-      return NextResponse.json({ error: 'Invalid signature', status: 401 }, { status: 401 });
-    }
+  if (!verifySignature(rawBody, signature)) {
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
-  let payload: { event?: string; slug?: string; data?: Record<string, unknown>; timestamp?: number };
+  let payload: { event: string; slug: string; data: Record<string, unknown>; timestamp: string };
   try {
     payload = JSON.parse(rawBody);
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON', status: 400 }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
   const { event, slug, data } = payload;
+  console.log(`[boatwork/webhook] event=${event} slug=${slug}`);
 
-  if (!event || !slug) {
-    return NextResponse.json({ error: 'Missing event or slug', status: 400 }, { status: 400 });
-  }
+  // All recognized events trigger a sync to pull fresh data from the API.
+  const syncEvents = new Set([
+    'profile.updated',
+    'reviews.new',
+    'review.created',
+    'verification.badge',
+    'verification.updated',
+    'photo.added',
+    'photo.deleted',
+    'video.added',
+    'video.deleted',
+    'badge.awarded',
+    'badge.revoked',
+    'social.post.published',
+    'social.subscription.updated',
+  ]);
 
-  // Fire outbound webhooks first (non-blocking)
-  if (event) {
-    fireOutboundWebhooks(event as BoatworkEventType, slug, data).catch(console.error);
-  }
-
-  // Trigger sync if it's a profile-impacting event
-  if (PROFILE_UPDATE_EVENTS.has(event)) {
-    const siteUrl = getSiteUrl();
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (cronSecret) {
-      fetch(`${siteUrl}/api/boatwork/sync`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${cronSecret}`,
-          'Content-Type': 'application/json',
-        },
-      }).catch((err) => console.error('[webhook] Failed to trigger sync:', err));
-    }
+  if (syncEvents.has(event)) {
+    await fetch(`${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/api/boatwork/sync`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.CRON_SECRET ?? ''}` },
+    });
+    void fireOutboundWebhooks(event as BoatworkEventType, slug, data);
+  } else {
+    console.log(`[boatwork/webhook] unhandled event: ${event}`);
   }
 
   return NextResponse.json({ received: true, event });
+}
+
+export async function GET() {
+  return NextResponse.json({
+    endpoint: 'POST /api/boatwork/webhook',
+    description: 'Receives Boatwork.co profile update webhooks',
+    events: [
+      'profile.updated', 'review.created', 'reviews.new',
+      'verification.updated', 'verification.badge',
+      'photo.added', 'photo.deleted', 'video.added', 'video.deleted',
+      'badge.awarded', 'badge.revoked',
+      'social.post.published', 'social.subscription.updated',
+    ],
+    setup: 'Register this URL in your Boatwork Business Center → Integrations → Webhook',
+  });
 }

@@ -1,201 +1,193 @@
-export const TEMPLATE_VERSION = '2.0.0';
+// ============================================================
+// site.config.ts — Static fallback configuration for Marine Pro
+//
+// This file provides default values used when the Boatwork API
+// is unavailable. Replace the placeholder values with real data
+// for each deployed site.
+// ============================================================
 
-export interface ServiceConfig {
-  name: string;
-  description: string;
-  icon: string;
-  keywords?: string[];
-  benefits?: string[];
-  priceRange?: string;
-  typicalDuration?: string;
-}
+export const TEMPLATE_VERSION = '1.1.10';
 
-export interface ReviewConfig {
-  id: string | null;
-  author: string;
-  rating: number;
-  text: string;
-  date: string;
-  isVerified: boolean;
-  response: string | null;
-  responseDate: string | null;
-}
-
-export interface PortfolioItemConfig {
-  src: string;
-  caption?: string;
-}
-
-export interface VideoConfig {
-  src: string;
-  poster?: string;
-  caption?: string;
-}
+export type BoatworkEventType =
+  | 'profile.updated'
+  | 'review.created'
+  | 'reviews.new'
+  | 'verification.updated'
+  | 'verification.badge'
+  | 'photo.added'
+  | 'photo.deleted'
+  | 'video.added'
+  | 'video.deleted'
+  | 'badge.awarded'
+  | 'badge.revoked'
+  | 'social.post.published'
+  | 'social.subscription.updated'
+  | '*';
 
 export interface OutboundWebhookConfig {
   url: string;
+  event: BoatworkEventType;
+  enabled: boolean;
   secret?: string;
-  events: string[];
 }
 
-export interface SiteConfig {
-  name: string;
-  tagline: string;
-  description: string;
-  about: string;
-  phone: string;
-  email: string;
-  address: string;
-  location: string;
-  city: string;
-  state: string;
-  logoUrl: string;
-
-  boatwork: {
-    profileSlug: string;
-    profileId: string;
-    profileUrl: string;
-    logoUrl: string;
-    useLiveReviews: boolean;
-    staticReviews: ReviewConfig[];
-  };
-
-  services: ServiceConfig[];
-  commonProjects: string[];
-  portfolio: PortfolioItemConfig[];
-  videos: VideoConfig[];
-  serviceArea: string[];
-  serviceAreaDescription: string;
-
-  seo: {
-    titleTemplate: string;
-    defaultTitle: string;
-    description: string;
-    keywords: string[];
-  };
-
-  hoursOfOperation: Record<string, string>;
-
-  social: {
-    facebook: string | null;
-    instagram: string | null;
-    linkedin: string | null;
-    youtube: string | null;
-  };
-
-  badge: { profileUrl: string } | null;
-
-  resend: {
-    fromEmail: string;
-    toEmail: string;
-  };
-
-  outboundWebhooks: OutboundWebhookConfig[];
-}
-
-export const siteConfig: SiteConfig = {
-  name: 'Advanced Waterjet Solutions',
-  tagline: 'Your home for waterjet and laser cutting solutions in South Florida',
-  description:
-    "We are Advanced Waterjet Solutions, Fort Lauderdale's premier provider of precision waterjet and laser cutting services for the marine industry and beyond.",
-  about:
-    'Advanced Waterjet Solutions has served South Florida\'s marine and industrial community from our Fort Lauderdale facility at 3309 SW 11th Ave for over two decades. We specialize in precision waterjet cutting, laser cutting, and custom metal fabrication -- delivering tight tolerances and fast turnarounds to boat builders, yacht manufacturers, and marine repair shops across Broward and Miami-Dade counties. Whether you need a one-off custom bracket, production runs of hull components, or intricate stainless deck hardware, our team brings the same level of craftsmanship to every job. We work with aluminum, stainless steel, mild steel, and non-metallic materials, and our facility is equipped to handle everything from small prototypes to large production orders.',
-  phone: '1-954-533-2464',
-  email: 'jacob@sailplan.com',
-  address: '3309 SW 11th Ave, Fort Lauderdale, FL 33315',
-  location: '3309 SW 11th Ave, Fort Lauderdale, FL 33315, USA',
+export const siteConfig = {
+  // ── Core business info ────────────────────────────────────
+  name: 'Marine Pro',
+  tagline: 'Expert Yacht & Marine Services',
+  description: 'Professional yacht management and marine repair services delivered with precision and care.',
+  about: 'Marine Pro is a full-service marine contractor specializing in yacht management, repairs, and maintenance. Our experienced team delivers quality workmanship on every job.',
+  phone: '(555) 555-0100',
+  email: 'info@marinepro.example.com',
+  address: '123 Marina Way, Fort Lauderdale, FL 33316',
+  location: '123 Marina Way, Fort Lauderdale, FL 33316',
   city: 'Fort Lauderdale',
   state: 'FL',
-  logoUrl: 'https://boatwork-images.s3.us-east-1.amazonaws.com/4bc1a9e8-3141-45c2-a328-ac3cbf360e2e.png',
+  logoUrl: '',
 
+  // ── Boatwork integration ──────────────────────────────────
   boatwork: {
-    profileSlug: 'advanced-waterjet-solutions',
-    profileId: 'ababf6d2-ec4a-4c04-8a48-42c83cda8bfd',
-    profileUrl: 'https://boatwork.co/pro/advanced-waterjet-solutions/',
+    profileSlug: 'template',
+    profileId: '', // UUID — set during provisioning, permanent link to profile
+    profileUrl: 'https://boatwork.co/pro/template/',
     logoUrl: '/boatwork-logo.svg',
-    useLiveReviews: true,
-    staticReviews: [],
-  },
-
-  services: [
-    {
-      name: 'Welding & Fabrication',
-      description:
-        'Advanced Waterjet Solutions offers professional welding & fabrication services in Fort Lauderdale, FL. Precision waterjet and laser cutting for marine and industrial applications.',
-      icon: 'wrench',
-      keywords: ['waterjet cutting', 'laser cutting', 'metal fabrication', 'marine fabrication'],
-      benefits: ['Same-day service', 'Precision CNC cutting', 'Marine-grade materials'],
-      typicalDuration: 'Same day',
-    },
-  ],
-
-  commonProjects: [
-    'Custom marine bracket fabrication',
-    'Aluminum hull component cutting',
-    'Stainless steel deck hardware',
-    'Swim platform parts',
-    'Laser engraving for vessel ID',
-    'Custom tumblers & promotional items',
-  ],
-
-  portfolio: [
-    { src: 'https://awjsolutions.com/wp-content/uploads/2023/12/Image11.png', caption: 'Waterjet cutting precision work' },
-    { src: 'https://awjsolutions.com/wp-content/uploads/2023/10/photo-66.jpg', caption: 'Marine fabrication project' },
-    { src: 'https://awjsolutions.com/wp-content/uploads/2023/10/BRUCE-rotated.jpg', caption: 'Custom metal components' },
-    { src: 'https://awjsolutions.com/wp-content/uploads/2023/10/miami-3.jpg', caption: 'Marine metalwork' },
-    { src: 'https://awjsolutions.com/wp-content/uploads/2023/12/gen3.jpg', caption: 'Advanced waterjet solutions' },
-  ],
-
-  videos: [],
-
-  serviceArea: [
-    'Fort Lauderdale',
-    'Fort Lauderdale, FL',
-    'South Florida',
-    'Broward County',
-    'Miami-Dade County',
-  ],
-  serviceAreaDescription:
-    'Based in Fort Lauderdale, FL, we serve a 60 mile radius across South Florida including Broward and Miami-Dade counties.',
-
-  seo: {
-    titleTemplate: '%s | Advanced Waterjet Solutions',
-    defaultTitle: 'Advanced Waterjet Solutions | Marine Services in Fort Lauderdale, FL',
-    description:
-      'Advanced Waterjet Solutions provides Welding & Fabrication in Fort Lauderdale, FL. Precision waterjet and laser cutting for marine industry. Request a quote today.',
-    keywords: [
-      'waterjet cutting Fort Lauderdale',
-      'laser cutting Fort Lauderdale',
-      'marine fabrication South Florida',
-      'metal fabrication Fort Lauderdale',
-      'welding fabrication Fort Lauderdale',
-      'marine metalwork Florida',
+    useLiveReviews: false,
+    staticReviews: [
+      {
+        id: null as string | null,
+        author: 'John D.',
+        rating: 5,
+        text: 'Outstanding service — the team was professional, thorough, and on time.',
+        date: '2024-11-01',
+        isVerified: false,
+        response: null as string | null,
+        responseDate: null as string | null,
+      },
+      {
+        id: null as string | null,
+        author: 'Sarah M.',
+        rating: 5,
+        text: 'They handled everything from engine maintenance to detailing. Highly recommend.',
+        date: '2024-10-15',
+        isVerified: false,
+        response: null as string | null,
+        responseDate: null as string | null,
+      },
     ],
   },
 
+  // ── Services ──────────────────────────────────────────────
+  services: [
+    {
+      name: 'Yacht Management',
+      description: 'Comprehensive yacht management including scheduling, crew coordination, and maintenance oversight.',
+      icon: 'wheel',
+    },
+    {
+      name: 'General Marine Repair & Maintenance',
+      description: 'Full-service repairs and preventive maintenance to keep your vessel in peak condition.',
+      icon: 'wrench',
+    },
+    {
+      name: 'Deck & Fiberglass Repair',
+      description: 'Expert deck restoration and fiberglass repair using marine-grade materials.',
+      icon: 'anchor',
+    },
+    {
+      name: 'Marine Electricians & Electronics',
+      description: 'Installation, repair, and troubleshooting of all marine electrical systems and electronics.',
+      icon: 'electric',
+    },
+    {
+      name: 'Engine Maintenance & Repair',
+      description: 'Diesel and gas engine servicing, overhauls, and emergency repairs.',
+      icon: 'engine',
+    },
+  ],
+
+  // ── Common projects ───────────────────────────────────────
+  commonProjects: [
+    'Annual engine service',
+    'Bottom paint & hull cleaning',
+    'Fiberglass restoration',
+    'Electrical rewiring',
+    'Teak deck repair',
+    'Rigging inspection & replacement',
+  ],
+
+  // ── Portfolio ─────────────────────────────────────────────
+  portfolio: [
+    {
+      src: '/portfolio/boat-1.jpg',
+      caption: 'Full refit — 52ft motor yacht',
+    },
+    {
+      src: '/portfolio/boat-2.jpg',
+      caption: 'Fiberglass repair and repaint',
+    },
+    {
+      src: '/portfolio/boat-3.jpg',
+      caption: 'Engine overhaul — twin diesels',
+    },
+  ],
+
+  // ── Videos ───────────────────────────────────────────────
+  videos: [] as Array<{ src: string; poster: string; caption: string }>,
+
+  // ── Service area ─────────────────────────────────────────
+  serviceArea: [
+    'Fort Lauderdale',
+    'Miami',
+    'Palm Beach',
+    'Boca Raton',
+    'Broward County',
+    'Miami-Dade County',
+  ],
+  serviceAreaDescription: 'Based in Fort Lauderdale, FL, serving the surrounding marine community from Miami to Palm Beach.',
+
+  // ── SEO ───────────────────────────────────────────────────
+  seo: {
+    titleTemplate: '%s | Marine Pro',
+    defaultTitle: 'Marine Pro — Yacht & Marine Services in Fort Lauderdale',
+    description: 'Expert yacht management, marine repair, and maintenance services in Fort Lauderdale, FL. Licensed, insured, and Boatwork-verified.',
+    keywords: [
+      'marine repair',
+      'yacht management',
+      'boat maintenance',
+      'Fort Lauderdale marine',
+      'fiberglass repair',
+      'marine electrician',
+    ],
+  },
+
+  // ── Hours of operation ────────────────────────────────────
   hoursOfOperation: {
-    Monday: '8 AM – 4 PM',
-    Tuesday: '8 AM – 4 PM',
-    Wednesday: '8 AM – 4 PM',
-    Thursday: '8 AM – 4 PM',
-    Friday: '8 AM – 4 PM',
-    Saturday: 'Closed',
+    Monday: '8:00 AM – 5:00 PM',
+    Tuesday: '8:00 AM – 5:00 PM',
+    Wednesday: '8:00 AM – 5:00 PM',
+    Thursday: '8:00 AM – 5:00 PM',
+    Friday: '8:00 AM – 5:00 PM',
+    Saturday: '9:00 AM – 2:00 PM',
     Sunday: 'Closed',
-  },
+  } as Record<string, string>,
 
+  // ── Social media ─────────────────────────────────────────
   social: {
-    facebook: 'https://www.facebook.com/share/1KhFKCqXTA/?mibextid=wwXIfr',
-    instagram: 'https://www.instagram.com/advancedwaterjet?igsh=OGdkeDcwbHg2ZDJ5',
-    linkedin: null,
-    youtube: null,
+    facebook: null as string | null,
+    instagram: null as string | null,
+    linkedin: null as string | null,
+    youtube: null as string | null,
   },
 
-  badge: null,
+  // ── Boatwork badge (optional override) ───────────────────
+  badge: null as { profileUrl?: string } | null,
 
+  // ── Resend email ─────────────────────────────────────────
   resend: {
-    fromEmail: 'noreply@boatwork.co',
-    toEmail: 'jacob@sailplan.com',
+    fromEmail: 'noreply@marinepro.example.com',
+    toEmail: 'info@marinepro.example.com',
   },
 
-  outboundWebhooks: [],
+  // ── Outbound webhooks (optional) ─────────────────────────
+  outboundWebhooks: [] as OutboundWebhookConfig[],
 };

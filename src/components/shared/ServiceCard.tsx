@@ -1,16 +1,15 @@
-import React from 'react';
-import {
-  Wrench,
-  Lightning,
-  Anchor,
-  Boat,
-  Engine,
-  NavigationArrow,
-  CheckCircle,
-  Tag,
-  Clock,
-} from '@phosphor-icons/react/dist/ssr';
-import clsx from 'clsx';
+import { GiAnchor, GiShipWheel, GiWaves } from 'react-icons/gi';
+import { FiTool, FiZap, FiUsers, FiCheckCircle } from 'react-icons/fi';
+
+const iconMap: Record<string, React.ReactNode> = {
+  wheel: <GiShipWheel size={28} />,
+  anchor: <GiAnchor size={28} />,
+  waves: <GiWaves size={28} />,
+  wrench: <FiTool size={28} />,
+  electric: <FiZap size={28} />,
+  engine: <FiTool size={28} />,
+  captain: <FiUsers size={28} />,
+};
 
 interface ServiceCardProps {
   name: string;
@@ -20,125 +19,49 @@ interface ServiceCardProps {
   benefits?: string[];
   priceRange?: string | null;
   typicalDuration?: string | null;
-  variant?: 'default' | 'compact';
 }
 
-function ServiceIcon({
-  icon,
-  className,
-  style,
-}: {
-  icon: string;
-  className?: string;
-  style?: React.CSSProperties;
-}) {
-  const props = { className, style, weight: 'regular' as const, 'aria-hidden': true };
-  switch (icon) {
-    case 'engine':
-      return <Engine {...props} />;
-    case 'electric':
-      return <Lightning {...props} />;
-    case 'anchor':
-      return <Anchor {...props} />;
-    case 'wheel':
-      return <Boat {...props} />;
-    case 'wrench':
-      return <Wrench {...props} />;
-    case 'captain':
-      return <NavigationArrow {...props} />;
-    default:
-      return <Wrench {...props} />;
-  }
-}
-
-export function ServiceCard({
-  name,
-  description,
-  icon,
-  keywords,
-  benefits,
-  priceRange,
-  typicalDuration,
-  variant = 'default',
-}: ServiceCardProps) {
+export function ServiceCard({ name, description, icon, keywords, benefits, priceRange, typicalDuration }: ServiceCardProps) {
   return (
-    <div className={clsx('service-card group', variant === 'compact' && 'p-5')}>
-      {/* Icon */}
-      <div
-        className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-colors duration-300 group-hover:bg-[var(--color-accent)]"
-        style={{ backgroundColor: 'var(--color-bg)' }}
-      >
-        <ServiceIcon
-          icon={icon}
-          className="w-6 h-6 transition-colors duration-300 group-hover:text-white"
-          style={{ color: 'var(--color-primary)' } as React.CSSProperties}
-        />
+    <div className="bg-white border border-cream-dark hover:border-gold/40 p-8 group transition-all duration-300 hover:shadow-lg flex flex-col">
+      <div className="text-gold mb-5 group-hover:scale-110 transition-transform duration-300 inline-block">
+        {iconMap[icon] ?? iconMap.anchor}
       </div>
-
-      {/* Title */}
-      <h3 className="font-heading font-bold text-lg mb-2" style={{ color: 'var(--color-text)' }}>
-        {name}
-      </h3>
-
-      {/* Description */}
-      <p
-        className="text-sm leading-relaxed mb-4 line-clamp-4"
-        style={{ color: 'var(--color-text-light)' }}
-      >
-        {description}
-      </p>
-
-      {/* Benefits */}
-      {benefits && benefits.length > 0 && variant === 'default' && (
-        <ul className="space-y-1 mb-4">
-          {benefits.slice(0, 3).map((b) => (
-            <li key={b} className="flex items-start gap-2 text-xs" style={{ color: 'var(--color-text-light)' }}>
-              <CheckCircle
-                className="w-4 h-4 flex-shrink-0 mt-0.5"
-                style={{ color: 'var(--color-accent)' }}
-                weight="fill"
-                aria-hidden
-              />
-              {b}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* Meta row */}
+      <h3 className="font-serif text-lg font-semibold text-navy mb-3">{name}</h3>
+      <p className="text-text-light text-sm leading-relaxed font-sans line-clamp-4 flex-1">{description}</p>
       {(priceRange || typicalDuration) && (
-        <div className="flex flex-wrap gap-2 mt-auto pt-3 border-t" style={{ borderColor: 'var(--color-bg-dark)' }}>
+        <div className="flex flex-wrap gap-3 mt-4">
           {priceRange && (
-            <span className="inline-flex items-center gap-1 text-xs font-mono" style={{ color: 'var(--color-accent-dark)' }}>
-              <Tag className="w-3 h-3" weight="bold" aria-hidden />
+            <span className="inline-flex items-center text-xs font-sans font-semibold text-navy bg-cream border border-cream-dark px-2.5 py-1 rounded-full">
               {priceRange}
             </span>
           )}
           {typicalDuration && (
-            <span className="inline-flex items-center gap-1 text-xs font-mono" style={{ color: 'var(--color-text-light)' }}>
-              <Clock className="w-3 h-3" weight="bold" aria-hidden />
+            <span className="inline-flex items-center text-xs font-sans font-semibold text-navy bg-cream border border-cream-dark px-2.5 py-1 rounded-full">
               {typicalDuration}
             </span>
           )}
         </div>
       )}
-
-      {/* Keywords */}
-      {keywords && keywords.length > 0 && variant === 'default' && (
-        <div className="flex flex-wrap gap-1 mt-3">
-          {keywords.slice(0, 4).map((k) => (
-            <span
-              key={k}
-              className="text-xs px-2 py-0.5 rounded-full font-mono"
-              style={{
-                backgroundColor: 'var(--color-bg)',
-                color: 'var(--color-text-light)',
-              }}
-            >
-              {k}
-            </span>
+      {benefits && benefits.length > 0 && (
+        <ul className="mt-4 space-y-2">
+          {benefits.map((b) => (
+            <li key={b} className="flex items-start gap-2 text-xs font-sans text-text">
+              <FiCheckCircle className="text-gold mt-0.5 flex-shrink-0" size={13} />
+              <span>{b}</span>
+            </li>
           ))}
-        </div>
+        </ul>
+      )}
+      {keywords && keywords.length > 0 && (
+        <ul className="mt-4 space-y-1.5">
+          {keywords.map((kw) => (
+            <li key={kw} className="flex items-start gap-2 text-xs font-sans text-text-light">
+              <span className="mt-1 w-1.5 h-1.5 bg-gold rounded-full flex-shrink-0" />
+              <span>{kw}</span>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
