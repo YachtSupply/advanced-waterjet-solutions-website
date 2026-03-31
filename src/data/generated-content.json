@@ -1,41 +1,41 @@
 {
-  "updatedAt": "2026-03-30T21:16:16.414Z",
+  "updatedAt": "2026-03-31T02:20:56.284Z",
   "specialtiesKey": "Welding & Fabrication",
   "servicesKey": "",
   "contentVersion": "6",
   "content": {
-    "tagline": "Precision Cuts. Custom Fabrication. Built for the Sea.",
-    "about": "Advanced Waterjet Solutions is Fort Lauderdale's premier provider of precision waterjet and laser cutting services for the marine industry and beyond. Located at 3309 SW 11th Ave in Fort Lauderdale, Florida, we bring cutting-edge technology and over 20 years of expertise to every custom metal fabrication project we take on. Whether you're a boat builder in Broward County or a yacht owner docked in Miami, we deliver the kind of precision that serious marine work demands.\n\nOur facility is equipped to handle complex welding and fabrication projects from the ground up. We work with a wide range of metals and alloys — cutting, shaping, and joining components to exact specifications using both waterjet and laser cutting technology alongside skilled structural and custom welding. From custom marine hardware and structural frames to intricate decorative metalwork, our fabrication capabilities are built around accuracy, repeatability, and fast turnaround times that keep your project on schedule.\n\nWe serve boat builders, yacht manufacturers, marine repair shops, and vessel owners throughout South Florida who need reliable, high-quality metalwork done right the first time. Our team understands the demanding environment that marine components face — saltwater corrosion, structural stress, and the need for tight tolerances — and we fabricate accordingly. From Fort Lauderdale and Miami to Palm Beach and the surrounding communities, Advanced Waterjet Solutions is the shop South Florida's marine industry turns to when precision and craftsmanship matter.",
+    "tagline": "Precision Cutting and Fabrication for Marine Industry",
+    "about": "Advanced Waterjet Solutions is Fort Lauderdale's premier provider of precision waterjet and laser cutting services for the marine industry and beyond. Located at 3309 SW 11th Ave in Fort Lauderdale, Florida, we bring cutting-edge technology and over 20 years of expertise to every custom metal fabrication project we take on. Whether you're a boat builder in Broward County or a yacht owner in Palm Beach, we deliver the kind of accuracy and craftsmanship that demanding marine applications require.\n\nOur facility specializes in custom welding and fabrication work built specifically for the marine environment. From structural steel and aluminum welding to stainless steel component fabrication, we handle projects that require tight tolerances and materials that can stand up to saltwater conditions. We work with MIG, TIG, and stick welding processes across a wide range of metals, producing everything from custom brackets and frames to complex assemblies for commercial and recreational vessels alike. Our waterjet and laser cutting capabilities allow us to cut intricate shapes with precision that sets the foundation for clean, strong welds every time.\n\nWe serve boat builders, yacht manufacturers, marine repair shops, and vessel owners throughout South Florida — from Fort Lauderdale and Miami-Dade County up through Palm Beach and the surrounding coastal communities. Our clients come to us because they need fast turnaround times without sacrificing quality. Whether it's a one-off custom part or a production run for a boatyard, we treat every project with the same attention to detail. If it floats and it needs metal work done right, we're the shop South Florida turns to.",
     "seoTitle": "Advanced Waterjet Solutions | Welding & Fabrication Fort Lauderdale, FL",
-    "seoDescription": "Custom welding & fabrication for marine vessels in Fort Lauderdale, FL. Serving South Florida with precision metalwork. Call Advanced Waterjet Solutions today.",
+    "seoDescription": "Custom marine welding & fabrication in Fort Lauderdale, FL. Serving South Florida boat builders & yacht owners. Call Advanced Waterjet Solutions today.",
     "seoKeywords": [
-      "marine welding fabrication Fort Lauderdale",
-      "custom metal fabrication Fort Lauderdale FL",
-      "waterjet cutting South Florida",
-      "marine fabrication Broward County",
-      "yacht fabrication Fort Lauderdale",
-      "structural welding marine Fort Lauderdale",
-      "custom marine hardware fabrication Florida",
-      "laser cutting marine South Florida"
+      "marine welding Fort Lauderdale FL",
+      "custom metal fabrication Fort Lauderdale",
+      "marine fabrication South Florida",
+      "aluminum welding Fort Lauderdale",
+      "stainless steel marine fabrication Broward County",
+      "boat fabrication Fort Lauderdale FL",
+      "waterjet cutting marine Fort Lauderdale",
+      "yacht fabrication South Florida"
     ],
     "serviceDescriptions": {
-      "Welding & Fabrication": "Advanced Waterjet Solutions provides precision welding and custom metal fabrication for marine vessels, combining structural welding expertise with waterjet and laser cutting technology to produce components built to exact specifications. From custom marine hardware and structural frames to decorative metalwork and replacement parts, every fabricated piece is built to withstand the rigors of marine environments. Fast turnaround times and over 20 years of hands-on fabrication experience ensure your project is done right and on schedule."
+      "Welding & Fabrication": "Advanced Waterjet Solutions provides precision marine welding and custom metal fabrication using MIG, TIG, and stick welding processes across aluminum, stainless steel, and structural steel. From custom brackets and structural frames to complex multi-component assemblies, every weld is built to handle the demands of saltwater marine environments. Tight tolerances and clean fitment are the standard — not the exception."
     },
-    "serviceAreaDescription": "Based in Fort Lauderdale, FL, Advanced Waterjet Solutions serves boat owners and marine businesses throughout South Florida within a 60-mile radius.",
+    "serviceAreaDescription": "Based in Fort Lauderdale, FL, Advanced Waterjet Solutions serves boat builders, marinas, and vessel owners across South Florida within a 60-mile radius.",
     "commonProjects": [
-      "Custom stainless steel marine hardware fabricated to vessel specifications",
-      "Structural frame welding and repair for commercial and recreational boats",
-      "Precision waterjet-cut deck plates, hatches, and marine panels",
-      "Custom aluminum fabrication for boat railings, towers, and arches",
-      "Replacement metal components cut and welded to OEM tolerances",
-      "Decorative and functional metalwork for yacht interiors and exteriors",
-      "Fabrication of engine mounts, brackets, and custom mechanical supports"
+      "Custom aluminum bracket and frame fabrication for recreational vessels",
+      "Stainless steel railing and hardware fabrication for yacht refits",
+      "Structural welding repairs on commercial and charter boat hulls",
+      "Custom engine mount and machinery bed fabrication for marine vessels",
+      "Precision waterjet-cut parts for boat builders and marine manufacturers",
+      "Custom swim platform and transom fabrication for sportfishing boats",
+      "One-off component fabrication for marine repair shops and boatyards"
     ],
     "serviceAreaLocalities": [
       "Fort Lauderdale, FL",
       "Miami, FL",
-      "Boca Raton, FL",
       "West Palm Beach, FL",
+      "Boca Raton, FL",
       "Hollywood, FL"
     ],
     "serviceAreaTitle": "Our Service Area"
