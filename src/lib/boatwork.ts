@@ -62,6 +62,23 @@ export interface BoatworkBadge {
   isVerified: boolean;
 }
 
+export interface BoatworkUpdate {
+  id: string;
+  content: string;
+  title: string | null;
+  slug: string | null;
+  isLongForm: boolean;
+  linkUrl: string | null;
+  linkTitle: string | null;
+  linkDescription: string | null;
+  linkImage: string | null;
+  linkDomain: string | null;
+  imageUrl: string | null;
+  imageAlt: string | null;
+  publishedAt: string;
+  isPinned: boolean;
+}
+
 export interface BoatworkSeo {
   titles: Record<string, string>;
   metaDescriptions: Record<string, string>;
@@ -102,6 +119,7 @@ export interface BoatworkProfile {
   websiteTheme: string | null;
   averageResponseTime: string | null;
   seo: BoatworkSeo | null;
+  updates: BoatworkUpdate[];
   social: {
     facebook: string | null;
     instagram: string | null;
@@ -183,6 +201,29 @@ function normalizeVideo(raw: Record<string, unknown>): BoatworkVideo | null {
   };
 }
 
+function normalizeUpdate(raw: Record<string, unknown>): BoatworkUpdate | null {
+  const id = asString(raw.id);
+  const content = asString(raw.content);
+  const publishedAt = asString(raw.publishedAt);
+  if (!id || !content || !publishedAt) return null;
+  return {
+    id,
+    content,
+    title: asString(raw.title),
+    slug: asString(raw.slug),
+    isLongForm: raw.isLongForm === true,
+    linkUrl: asString(raw.linkUrl),
+    linkTitle: asString(raw.linkTitle),
+    linkDescription: asString(raw.linkDescription),
+    linkImage: asString(raw.linkImage),
+    linkDomain: asString(raw.linkDomain),
+    imageUrl: asString(raw.imageUrl),
+    imageAlt: asString(raw.imageAlt),
+    publishedAt,
+    isPinned: raw.isPinned === true,
+  };
+}
+
 function safeArray<T>(arr: unknown, mapper: (item: Record<string, unknown>) => T | null): T[] {
   if (!Array.isArray(arr)) return [];
   return arr.map((item) => mapper(item as Record<string, unknown>)).filter(Boolean) as T[];
@@ -219,6 +260,7 @@ export async function fetchBoatworkProfile(slug: string, profileId?: string): Pr
     if (!raw || typeof raw !== 'object') return null;
 
     const reviews = safeArray(raw.reviews, normalizeReview);
+    const updates = safeArray(raw.updates, normalizeUpdate);
 
     const profile: BoatworkProfile = {
       name: asString(raw.name) ?? asString(raw.businessName) ?? slug,
@@ -298,6 +340,7 @@ export async function fetchBoatworkProfile(slug: string, profileId?: string): Pr
         return [];
       })(),
       profileUrl: asString(raw.profileUrl) ?? `https://boatwork.co/pro/${slug}/`,
+      updates,
       updatedAt: asString(raw.updatedAt) ?? new Date().toISOString(),
       social: {
         facebook: asString((raw.social as Record<string, unknown>)?.facebook) ?? asString(raw.facebookUrl) ?? null,
