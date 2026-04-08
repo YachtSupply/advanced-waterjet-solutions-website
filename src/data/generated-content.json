@@ -38,6 +38,27 @@
       "Boca Raton, FL",
       "Hollywood, FL"
     ],
-    "serviceAreaTitle": "Our Service Area"
-  }
+    "serviceAreaTitle": "Our Service Area",
+    "reviewSynopsis": {
+      "aggregateRating": 4.6,
+      "totalReviewCount": 10,
+      "boatworkReviewCount": 1,
+      "googleReviewCount": 9,
+      "summary": "Our clients know they can count on us when it matters most — we've bailed customers out of tough situations on more than one occasion, and we take pride in making that happen. We're consistently recognized for being easy to work with and delivering some of the fastest turnaround times in the industry. With a 4.6 out of 5 rating across 10 reviews, our customers' experiences speak to the reliability and efficiency we bring to every project.",
+      "keywords": [
+        "fast turnaround times",
+        "reliable waterjet cutting",
+        "easy to work with",
+        "emergency cutting solutions",
+        "precision waterjet services",
+        "dependable team",
+        "quick project delivery"
+      ],
+      "sources": [
+        "boatwork",
+        "google"
+      ]
+    }
+  },
+  "synopsisUpdatedAt": "2026-04-08T13:19:59.161Z"
 }
